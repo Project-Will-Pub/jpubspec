@@ -1,6 +1,6 @@
 package xyz.rk0cc.willpub.pubspec.data.dependencies;
 
-import xyz.rk0cc.willpub.pubspec.data.dependencies.type.DependencyReferenceType;
+import xyz.rk0cc.willpub.pubspec.data.dependencies.type.DependencyReference;
 
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
@@ -9,8 +9,8 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-public abstract class DependenciesReferenceSet implements Set<DependencyReferenceType>, Serializable, Cloneable {
-    private final HashMap<String, DependencyReferenceType> references;
+public abstract class DependenciesReferenceSet implements Set<DependencyReference>, Serializable, Cloneable {
+    private final HashMap<String, DependencyReference> references;
 
     public DependenciesReferenceSet() {
         this.references = new HashMap<>();
@@ -39,7 +39,7 @@ public abstract class DependenciesReferenceSet implements Set<DependencyReferenc
 
     @Nonnull
     @Override
-    public final Iterator<DependencyReferenceType> iterator() {
+    public final Iterator<DependencyReference> iterator() {
         return toNativeSet().iterator();
     }
 
@@ -56,13 +56,13 @@ public abstract class DependenciesReferenceSet implements Set<DependencyReferenc
         return toNativeSet().toArray(a);
     }
 
-    final boolean $add(@Nonnull DependencyReferenceType dependencyReferenceType) {
+    final boolean $add(@Nonnull DependencyReference dependencyReferenceType) {
         return references.putIfAbsent(dependencyReferenceType.name(), dependencyReferenceType) != null;
     }
 
     @Override
     public final boolean remove(@Nonnull Object o) {
-        if (o instanceof DependencyReferenceType drt) return references.remove(drt.name(), drt);
+        if (o instanceof DependencyReference drt) return references.remove(drt.name(), drt);
         else if (o instanceof String s) return references.remove(s) != null;
         else throw new ClassCastException("'" + o.getClass().getName() + "' can not remove reference in this set");
     }
@@ -70,7 +70,7 @@ public abstract class DependenciesReferenceSet implements Set<DependencyReferenc
     @Override
     public final boolean containsAll(@Nonnull Collection<?> c) {
         return c.stream().allMatch(ct -> {
-            final Stream<DependencyReferenceType> streamType = toNativeSet().stream();
+            final Stream<DependencyReference> streamType = toNativeSet().stream();
 
             if (ct instanceof String s)
                 return streamType.allMatch(drts -> drts.name().equals(s));
@@ -80,7 +80,7 @@ public abstract class DependenciesReferenceSet implements Set<DependencyReferenc
     }
 
     @Override
-    public boolean addAll(@Nonnull Collection<? extends DependencyReferenceType> c) {
+    public boolean addAll(@Nonnull Collection<? extends DependencyReference> c) {
         try {
             c.forEach(this::add);
             return true;
@@ -90,12 +90,12 @@ public abstract class DependenciesReferenceSet implements Set<DependencyReferenc
     }
 
     @Override
-    public boolean retainAll(Collection<?> c) {
+    public boolean retainAll(@Nonnull Collection<?> c) {
         return false;
     }
 
     @Override
-    public boolean removeAll(Collection<?> c) {
+    public boolean removeAll(@Nonnull Collection<?> c) {
         return false;
     }
 
@@ -105,27 +105,27 @@ public abstract class DependenciesReferenceSet implements Set<DependencyReferenc
     }
 
     @Override
-    public final Spliterator<DependencyReferenceType> spliterator() {
+    public final Spliterator<DependencyReference> spliterator() {
         return toNativeSet().spliterator();
     }
 
     @Override
-    public final Stream<DependencyReferenceType> stream() {
+    public final Stream<DependencyReference> stream() {
         return toNativeSet().stream();
     }
 
     @Override
-    public Stream<DependencyReferenceType> parallelStream() {
+    public Stream<DependencyReference> parallelStream() {
         return toNativeSet().parallelStream();
     }
 
     @Override
-    public final void forEach(@Nonnull Consumer<? super DependencyReferenceType> action) {
+    public final void forEach(@Nonnull Consumer<? super DependencyReference> action) {
         toNativeSet().forEach(action);
     }
 
     @Nonnull
-    public final Set<DependencyReferenceType> toNativeSet() {
+    public final Set<DependencyReference> toNativeSet() {
         return new HashSet<>(references.values());
     }
 
