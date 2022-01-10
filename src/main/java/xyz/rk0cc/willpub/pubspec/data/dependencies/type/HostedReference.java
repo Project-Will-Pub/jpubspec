@@ -3,10 +3,9 @@ package xyz.rk0cc.willpub.pubspec.data.dependencies.type;
 import xyz.rk0cc.josev.constraint.pub.PubSemVerConstraint;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.Objects;
 
-public final class HostedReference extends DependencyReference {
+public final class HostedReference extends DependencyReference implements VersionConstrainedDependency {
     private final PubSemVerConstraint versionConstraint;
 
     public HostedReference(@Nonnull String name, @Nonnull PubSemVerConstraint versionConstraint) {
@@ -14,19 +13,20 @@ public final class HostedReference extends DependencyReference {
         this.versionConstraint = versionConstraint;
     }
 
+    public HostedReference(@Nonnull String name) {
+        this(name, PubSemVerConstraint.parse(null));
+    }
+
     @Nonnull
+    @Override
     public PubSemVerConstraint versionConstraint() {
         return versionConstraint;
     }
 
     @Nonnull
+    @Override
     public HostedReference changeVersionConstraint(@Nonnull PubSemVerConstraint versionConstraint) {
         return new HostedReference(name(), versionConstraint);
-    }
-
-    @Nonnull
-    public HostedReference changeVersionConstraint(@Nullable String versionConstraint) {
-        return changeVersionConstraint(PubSemVerConstraint.parse(versionConstraint));
     }
 
     @Override

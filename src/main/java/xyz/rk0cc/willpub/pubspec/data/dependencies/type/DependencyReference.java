@@ -4,7 +4,8 @@ import javax.annotation.Nonnull;
 import java.io.Serializable;
 import java.util.Objects;
 
-public abstract class DependencyReference implements Serializable {
+public sealed abstract class DependencyReference implements Serializable
+        permits GitReference, HostedReference, LocalReference, SDKReference, ThirdPartyHostedReference {
     private final String name;
 
     DependencyReference(@Nonnull String name) {

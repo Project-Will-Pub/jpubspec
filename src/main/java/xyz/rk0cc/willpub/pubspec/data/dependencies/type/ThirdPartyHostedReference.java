@@ -3,12 +3,11 @@ package xyz.rk0cc.willpub.pubspec.data.dependencies.type;
 import xyz.rk0cc.josev.constraint.pub.PubSemVerConstraint;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Objects;
 
-public final class ThirdPartyHostedReference extends DependencyReference {
+public final class ThirdPartyHostedReference extends DependencyReference implements VersionConstrainedDependency {
     private final URL repositoryURL;
     private final String hostedName;
     private final PubSemVerConstraint versionConstraint;
@@ -33,6 +32,14 @@ public final class ThirdPartyHostedReference extends DependencyReference {
         this(name, repositoryURL, name, versionConstraint);
     }
 
+    public ThirdPartyHostedReference(@Nonnull String name, @Nonnull URL repositoryURL, @Nonnull String hostedName) {
+        this(name, repositoryURL, hostedName, PubSemVerConstraint.parse(null));
+    }
+
+    public ThirdPartyHostedReference(@Nonnull String name, @Nonnull URL repositoryURL) {
+        this(name, repositoryURL, name);
+    }
+
     @Nonnull
     public URL repositoryURL() {
         return repositoryURL;
@@ -44,6 +51,7 @@ public final class ThirdPartyHostedReference extends DependencyReference {
     }
 
     @Nonnull
+    @Override
     public PubSemVerConstraint versionConstraint() {
         return versionConstraint;
     }
@@ -73,13 +81,9 @@ public final class ThirdPartyHostedReference extends DependencyReference {
     }
 
     @Nonnull
+    @Override
     public ThirdPartyHostedReference changeVersionConstraint(@Nonnull PubSemVerConstraint versionConstraint) {
         return new ThirdPartyHostedReference(name(), repositoryURL, hostedName, versionConstraint);
-    }
-
-    @Nonnull
-    public ThirdPartyHostedReference changeVersionConstraint(@Nullable String versionConstraint) {
-        return changeVersionConstraint(PubSemVerConstraint.parse(versionConstraint));
     }
 
     @Override
