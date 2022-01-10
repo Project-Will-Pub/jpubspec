@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <name>jpubspec</name>
+    <description>Reading and writing pubspec.yaml data on Java</description>
+
+    <contributors>
+        <contributor>
+            <name>Cyrus Chan</name>
+            <url>https://www.rk0cc.xyz</url>
+            <email>enquiry@rk0cc.xyz</email>
+            <timezone>8</timezone>
+        </contributor>
+    </contributors>
+
+    <developers>
+        <developer>
+            <name>Cyrus Chan</name>
+            <url>https://www.rk0cc.xyz</url>
+            <email>enquiry@rk0cc.xyz</email>
+            <timezone>8</timezone>
+        </developer>
+    </developers>
+
+    <groupId>xyz.rk0cc.willpub</groupId>
+    <artifactId>jpubspec</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.yaml</groupId>
+                <artifactId>snakeyaml</artifactId>
+                <version>1.30</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>xyz.rk0cc.jogu</groupId>
+            <artifactId>jogu</artifactId>
+            <version>1.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>xyz.rk0cc.josev</groupId>
+            <artifactId>josev-core</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>xyz.rk0cc.josev</groupId>
+            <artifactId>josev-pub</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>3.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>2.13.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.13.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+            <version>2.13.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>5.8.2</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
