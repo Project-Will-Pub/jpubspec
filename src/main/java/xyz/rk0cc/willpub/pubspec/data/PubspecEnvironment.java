@@ -1,4 +1,4 @@
-package xyz.rk0cc.willpub.pubspec.data.environment;
+package xyz.rk0cc.willpub.pubspec.data;
 
 import xyz.rk0cc.josev.constraint.pub.*;
 
