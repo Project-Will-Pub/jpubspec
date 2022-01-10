@@ -2,6 +2,7 @@ package xyz.rk0cc.willpub.pubspec.data.dependencies.type;
 
 import javax.annotation.Nonnull;
 import java.io.Serializable;
+import java.util.Objects;
 
 public abstract class DependencyReference implements Serializable {
     private final String name;
@@ -12,5 +13,13 @@ public abstract class DependencyReference implements Serializable {
 
     public final String name() {
         return name;
+    }
+
+    @Override
+    public abstract boolean equals(Object o);
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name);
     }
 }

@@ -5,6 +5,7 @@ import xyz.rk0cc.willpub.pubspec.data.dependencies.type.DependencyReference;
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import java.io.Serializable;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -12,11 +13,11 @@ import java.util.stream.Stream;
 public abstract class DependenciesReferenceSet implements Set<DependencyReference>, Serializable, Cloneable {
     private final HashMap<String, DependencyReference> references;
 
-    public DependenciesReferenceSet() {
+    DependenciesReferenceSet() {
         this.references = new HashMap<>();
     }
 
-    public DependenciesReferenceSet(@Nonnull DependenciesReferenceSet references) {
+    DependenciesReferenceSet(@Nonnull DependenciesReferenceSet references) {
         this.references = new HashMap<>(references.references);
     }
 
@@ -56,8 +57,25 @@ public abstract class DependenciesReferenceSet implements Set<DependencyReferenc
         return toNativeSet().toArray(a);
     }
 
-    final boolean $add(@Nonnull DependencyReference dependencyReferenceType) {
-        return references.putIfAbsent(dependencyReferenceType.name(), dependencyReferenceType) != null;
+    abstract boolean isAllowToAdd(@Nonnull DependencyReference dependencyReference);
+
+    private boolean mockAddPassed(@Nonnull DependencyReference dependencyReference) {
+        if (!isAllowToAdd(dependencyReference)) return false;
+
+        HashMap<String, DependencyReference> dummy = new HashMap<>();
+
+        return dummy.put(dependencyReference.name(), dependencyReference) != null;
+    }
+
+    @Override
+    public final boolean add(@Nonnull DependencyReference dependencyReference) {
+        return mockAddPassed(dependencyReference)
+                && references.putIfAbsent(dependencyReference.name(), dependencyReference) != null;
+    }
+
+    public final boolean set(@Nonnull DependencyReference dependencyReference) {
+        return mockAddPassed(dependencyReference)
+                && references.put(dependencyReference.name(), dependencyReference) != null;
     }
 
     @Override
@@ -79,24 +97,61 @@ public abstract class DependenciesReferenceSet implements Set<DependencyReferenc
         });
     }
 
-    @Override
-    public boolean addAll(@Nonnull Collection<? extends DependencyReference> c) {
-        try {
-            c.forEach(this::add);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+    private boolean multipleDRApply(
+            @Nonnull Collection<? extends DependencyReference> c,
+            @Nonnull Consumer<DependencyReference> action
+    ) {
+        Stream<? extends DependencyReference> drs = c.stream();
+
+        if (drs.anyMatch(dr -> !mockAddPassed(dr))) return false;
+
+        drs.forEach(action);
+
+        return true;
     }
 
     @Override
-    public boolean retainAll(@Nonnull Collection<?> c) {
-        return false;
+    public final boolean addAll(@Nonnull Collection<? extends DependencyReference> c) {
+        return multipleDRApply(c, this::add);
+    }
+
+    public final boolean setAll(@Nonnull Collection<? extends DependencyReference> c) {
+        return multipleDRApply(c, this::set);
     }
 
     @Override
-    public boolean removeAll(@Nonnull Collection<?> c) {
+    public final boolean retainAll(@Nonnull Collection<?> c) {
+        throw new UnsupportedOperationException("This set can not use retain functions");
+    }
+
+    @Override
+    public final boolean removeAll(@Nonnull Collection<?> c) {
         return false;
+    }
+
+    @Nonnull
+    public final DependencyReference get(@Nonnull String dependencyName) {
+        return Objects.requireNonNull(references.get(dependencyName));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Nonnull
+    public final <D extends DependencyReference> D get(
+            @Nonnull String dependencyName,
+            @Nonnull Class<D> dependencyType
+    ) {
+        if (Modifier.isAbstract(dependencyType.getModifiers()))
+            throw new IllegalArgumentException("Do not uses abstracted dependency type to apply.");
+
+        final DependencyReference initGet = get(dependencyName);
+
+        if (!initGet.getClass().equals(dependencyType))
+            throw new ClassCastException(
+                    "Dependency '" + dependencyName + "' is " + initGet.getClass().getName() +
+                    ", not " + dependencyType.getName()
+            );
+
+        return (D) initGet;
     }
 
     @Override
@@ -115,7 +170,7 @@ public abstract class DependenciesReferenceSet implements Set<DependencyReferenc
     }
 
     @Override
-    public Stream<DependencyReference> parallelStream() {
+    public final Stream<DependencyReference> parallelStream() {
         return toNativeSet().parallelStream();
     }
 
