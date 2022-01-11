@@ -1,6 +1,7 @@
 package xyz.rk0cc.willpub.pubspec.data.dependencies.type;
 
 import xyz.rk0cc.josev.constraint.pub.PubSemVerConstraint;
+import xyz.rk0cc.willpub.exceptions.pubspec.IllegalPubPackageNamingException;
 
 import javax.annotation.Nonnull;
 import java.net.MalformedURLException;
@@ -17,7 +18,7 @@ public final class ThirdPartyHostedReference extends DependencyReference impleme
             @Nonnull URL repositoryURL,
             @Nonnull String hostedName,
             @Nonnull PubSemVerConstraint versionConstraint
-    ) {
+    ) throws IllegalPubPackageNamingException {
         super(name);
         this.repositoryURL = repositoryURL;
         this.hostedName = hostedName;
@@ -28,15 +29,17 @@ public final class ThirdPartyHostedReference extends DependencyReference impleme
             @Nonnull String name,
             @Nonnull URL repositoryURL,
             @Nonnull PubSemVerConstraint versionConstraint
-    ) {
+    ) throws IllegalPubPackageNamingException {
         this(name, repositoryURL, name, versionConstraint);
     }
 
-    public ThirdPartyHostedReference(@Nonnull String name, @Nonnull URL repositoryURL, @Nonnull String hostedName) {
+    public ThirdPartyHostedReference(@Nonnull String name, @Nonnull URL repositoryURL, @Nonnull String hostedName)
+            throws IllegalPubPackageNamingException {
         this(name, repositoryURL, hostedName, PubSemVerConstraint.parse(null));
     }
 
-    public ThirdPartyHostedReference(@Nonnull String name, @Nonnull URL repositoryURL) {
+    public ThirdPartyHostedReference(@Nonnull String name, @Nonnull URL repositoryURL)
+            throws IllegalPubPackageNamingException {
         this(name, repositoryURL, name);
     }
 
@@ -58,7 +61,9 @@ public final class ThirdPartyHostedReference extends DependencyReference impleme
 
     @Nonnull
     public ThirdPartyHostedReference changeRepositoryURL(@Nonnull URL repositoryURL) {
-        return new ThirdPartyHostedReference(name(), repositoryURL, hostedName, versionConstraint);
+        return DependencyReference.modifyHandler(
+                () -> new ThirdPartyHostedReference(name(), repositoryURL, hostedName, versionConstraint)
+        );
     }
 
     @Nonnull
@@ -72,7 +77,9 @@ public final class ThirdPartyHostedReference extends DependencyReference impleme
 
     @Nonnull
     public ThirdPartyHostedReference changeHostedName(@Nonnull String hostedName) {
-        return new ThirdPartyHostedReference(name(), repositoryURL, hostedName, versionConstraint);
+        return DependencyReference.modifyHandler(
+                () -> new ThirdPartyHostedReference(name(), repositoryURL, hostedName, versionConstraint)
+        );
     }
 
     @Nonnull
@@ -83,7 +90,9 @@ public final class ThirdPartyHostedReference extends DependencyReference impleme
     @Nonnull
     @Override
     public ThirdPartyHostedReference changeVersionConstraint(@Nonnull PubSemVerConstraint versionConstraint) {
-        return new ThirdPartyHostedReference(name(), repositoryURL, hostedName, versionConstraint);
+        return DependencyReference.modifyHandler(
+                () -> new ThirdPartyHostedReference(name(), repositoryURL, hostedName, versionConstraint)
+        );
     }
 
     @Override

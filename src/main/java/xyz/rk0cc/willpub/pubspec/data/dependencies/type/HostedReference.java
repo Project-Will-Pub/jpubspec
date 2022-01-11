@@ -1,19 +1,22 @@
 package xyz.rk0cc.willpub.pubspec.data.dependencies.type;
 
 import xyz.rk0cc.josev.constraint.pub.PubSemVerConstraint;
+import xyz.rk0cc.willpub.exceptions.pubspec.IllegalPubPackageNamingException;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Objects;
 
 public final class HostedReference extends DependencyReference implements VersionConstrainedDependency {
     private final PubSemVerConstraint versionConstraint;
 
-    public HostedReference(@Nonnull String name, @Nonnull PubSemVerConstraint versionConstraint) {
+    public HostedReference(@Nonnull String name, @Nonnull PubSemVerConstraint versionConstraint)
+            throws IllegalPubPackageNamingException {
         super(name);
         this.versionConstraint = versionConstraint;
     }
 
-    public HostedReference(@Nonnull String name) {
+    public HostedReference(@Nonnull String name) throws IllegalPubPackageNamingException {
         this(name, PubSemVerConstraint.parse(null));
     }
 
@@ -26,7 +29,7 @@ public final class HostedReference extends DependencyReference implements Versio
     @Nonnull
     @Override
     public HostedReference changeVersionConstraint(@Nonnull PubSemVerConstraint versionConstraint) {
-        return new HostedReference(name(), versionConstraint);
+        return DependencyReference.modifyHandler(() -> new HostedReference(name(), versionConstraint));
     }
 
     @Override

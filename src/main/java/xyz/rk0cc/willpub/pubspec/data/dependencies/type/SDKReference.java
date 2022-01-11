@@ -1,6 +1,7 @@
 package xyz.rk0cc.willpub.pubspec.data.dependencies.type;
 
 import xyz.rk0cc.josev.constraint.pub.PubSemVerConstraint;
+import xyz.rk0cc.willpub.exceptions.pubspec.IllegalPubPackageNamingException;
 
 import javax.annotation.Nonnull;
 import java.util.Objects;
@@ -9,13 +10,14 @@ public final class SDKReference extends DependencyReference implements VersionCo
     private final String sdk;
     private final PubSemVerConstraint versionConstraint;
 
-    public SDKReference(@Nonnull String name, @Nonnull String sdk, @Nonnull PubSemVerConstraint versionConstraint) {
+    public SDKReference(@Nonnull String name, @Nonnull String sdk, @Nonnull PubSemVerConstraint versionConstraint)
+            throws IllegalPubPackageNamingException {
         super(name);
         this.sdk = sdk;
         this.versionConstraint = versionConstraint;
     }
 
-    public SDKReference(@Nonnull String name, @Nonnull String sdk) {
+    public SDKReference(@Nonnull String name, @Nonnull String sdk) throws IllegalPubPackageNamingException {
         this(name, sdk, PubSemVerConstraint.parse(null));
     }
 
@@ -33,12 +35,12 @@ public final class SDKReference extends DependencyReference implements VersionCo
     @Nonnull
     @Override
     public SDKReference changeVersionConstraint(@Nonnull PubSemVerConstraint versionConstraint) {
-        return new SDKReference(name(), sdk, versionConstraint);
+        return DependencyReference.modifyHandler(() -> new SDKReference(name(), sdk, versionConstraint));
     }
 
     @Nonnull
     public SDKReference changeSDK(@Nonnull String sdk) {
-        return new SDKReference(name(), sdk, versionConstraint);
+        return DependencyReference.modifyHandler(() -> new SDKReference(name(), sdk, versionConstraint));
     }
 
     @Override

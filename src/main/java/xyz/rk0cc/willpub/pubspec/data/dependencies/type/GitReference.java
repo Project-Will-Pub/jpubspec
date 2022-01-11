@@ -1,6 +1,7 @@
 package xyz.rk0cc.willpub.pubspec.data.dependencies.type;
 
 import xyz.rk0cc.jogu.*;
+import xyz.rk0cc.willpub.exceptions.pubspec.IllegalPubPackageNamingException;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -15,14 +16,15 @@ public final class GitReference extends DependencyReference {
             @Nonnull GitRepositoryURL repositoryURL,
             @Nullable String path,
             @Nullable String ref
-    ) {
+    ) throws IllegalPubPackageNamingException {
         super(name);
         this.repositoryURL = repositoryURL;
         this.path = path;
         this.ref = ref;
     }
 
-    public GitReference(@Nonnull String name, @Nonnull GitRepositoryURL repositoryURL) {
+    public GitReference(@Nonnull String name, @Nonnull GitRepositoryURL repositoryURL)
+            throws IllegalPubPackageNamingException {
         this(name, repositoryURL, null, null);
     }
 
@@ -43,13 +45,13 @@ public final class GitReference extends DependencyReference {
 
     @Nonnull
     public GitReference changeRepositoryURL(@Nonnull GitRepositoryURL repositoryURL) {
-        return new GitReference(name(), repositoryURL, path, ref);
+        return DependencyReference.modifyHandler(() -> new GitReference(name(), repositoryURL, path, ref));
     }
 
     @Nonnull
     public GitReference changeRepositoryURL(@Nonnull String repositoryURL) {
         try {
-            return new GitReference(name(), GitRepositoryURL.parse(repositoryURL), path, ref);
+            return changeRepositoryURL(GitRepositoryURL.parse(repositoryURL));
         } catch (UnknownGitRepositoryURLTypeException e) {
             throw new IllegalArgumentException(e);
         }
@@ -57,12 +59,12 @@ public final class GitReference extends DependencyReference {
 
     @Nonnull
     public GitReference changePath(@Nullable String path) {
-        return new GitReference(name(), repositoryURL, path, ref);
+        return DependencyReference.modifyHandler(() -> new GitReference(name(), repositoryURL, path, ref));
     }
 
     @Nonnull
     public GitReference changeRef(@Nullable String ref) {
-        return new GitReference(name(), repositoryURL, path, ref);
+        return DependencyReference.modifyHandler(() -> new GitReference(name(), repositoryURL, path, ref));
     }
 
     @Override

@@ -1,5 +1,7 @@
 package xyz.rk0cc.willpub.pubspec.data.dependencies.type;
 
+import xyz.rk0cc.willpub.exceptions.pubspec.IllegalPubPackageNamingException;
+
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.nio.file.*;
@@ -8,7 +10,7 @@ import java.util.Objects;
 public final class LocalReference extends DependencyReference {
     private final String path;
 
-    public LocalReference(@Nonnull String name, @Nonnull String path) {
+    public LocalReference(@Nonnull String name, @Nonnull String path) throws IllegalPubPackageNamingException {
         super(name);
         this.path = path;
     }
@@ -20,7 +22,7 @@ public final class LocalReference extends DependencyReference {
 
     @Nonnull
     public LocalReference changePath(@Nonnull String path) {
-        return new LocalReference(name(), path);
+        return DependencyReference.modifyHandler(() -> new LocalReference(name(), path));
     }
 
     @Nonnull
