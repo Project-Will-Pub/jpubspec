@@ -49,12 +49,8 @@ public final class GitReference extends DependencyReference {
     }
 
     @Nonnull
-    public GitReference changeRepositoryURL(@Nonnull String repositoryURL) {
-        try {
-            return changeRepositoryURL(GitRepositoryURL.parse(repositoryURL));
-        } catch (UnknownGitRepositoryURLTypeException e) {
-            throw new IllegalArgumentException(e);
-        }
+    public GitReference changeRepositoryURL(@Nonnull String repositoryURL) throws UnknownGitRepositoryURLTypeException {
+        return changeRepositoryURL(GitRepositoryURL.parse(repositoryURL));
     }
 
     @Nonnull
