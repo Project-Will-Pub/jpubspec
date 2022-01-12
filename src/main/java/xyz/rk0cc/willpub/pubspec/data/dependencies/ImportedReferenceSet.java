@@ -9,8 +9,12 @@ public final class ImportedReferenceSet extends DependenciesReferenceSet {
         super();
     }
 
+    public ImportedReferenceSet(@Nonnull DependenciesReferenceSet references, boolean unmodifiable) {
+        super(references, unmodifiable);
+    }
+
     public ImportedReferenceSet(@Nonnull DependenciesReferenceSet references) {
-        super(references);
+        this(references, false);
     }
 
     @Override
@@ -21,6 +25,6 @@ public final class ImportedReferenceSet extends DependenciesReferenceSet {
     @Nonnull
     @Override
     public ImportedReferenceSet clone() {
-        return new ImportedReferenceSet(this);
+        return new ImportedReferenceSet(this, this.isUnmodifiable());
     }
 }

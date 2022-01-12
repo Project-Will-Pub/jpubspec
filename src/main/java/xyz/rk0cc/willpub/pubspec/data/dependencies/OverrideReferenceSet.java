@@ -1,7 +1,6 @@
 package xyz.rk0cc.willpub.pubspec.data.dependencies;
 
-import xyz.rk0cc.josev.constraint.pub.PubConstraintPattern;
-import xyz.rk0cc.josev.constraint.pub.PubSemVerConstraint;
+import xyz.rk0cc.josev.constraint.pub.*;
 import xyz.rk0cc.willpub.exceptions.pubspec.IllegalVersionConstraintException;
 import xyz.rk0cc.willpub.pubspec.data.dependencies.type.*;
 
@@ -13,8 +12,9 @@ public final class OverrideReferenceSet extends DependenciesReferenceSet {
         super();
     }
 
-    public OverrideReferenceSet(@Nonnull DependenciesReferenceSet references) throws IllegalVersionConstraintException {
-        super(references);
+    public OverrideReferenceSet(@Nonnull DependenciesReferenceSet references, boolean unmodifiable)
+            throws IllegalVersionConstraintException {
+        super(references, unmodifiable);
 
         Optional<PubSemVerConstraint> firstNonAbs = references.stream()
                 .filter(dr -> !mustBeAbsoluteVC(dr))
@@ -28,6 +28,10 @@ public final class OverrideReferenceSet extends DependenciesReferenceSet {
             );
     }
 
+    public OverrideReferenceSet(@Nonnull DependenciesReferenceSet references) throws IllegalVersionConstraintException {
+        this(references, false);
+    }
+
     @Override
     boolean isAllowToAdd(@Nonnull DependencyReference dependencyReference) {
         return mustBeAbsoluteVC(dependencyReference);
@@ -37,7 +41,7 @@ public final class OverrideReferenceSet extends DependenciesReferenceSet {
     @Override
     public OverrideReferenceSet clone() {
         try {
-            return new OverrideReferenceSet(this);
+            return new OverrideReferenceSet(this, this.isUnmodifiable());
         } catch (IllegalVersionConstraintException e) {
             throw new AssertionError(
                     "Unexpected illegal version constraint exception thrown when cloning reference",
