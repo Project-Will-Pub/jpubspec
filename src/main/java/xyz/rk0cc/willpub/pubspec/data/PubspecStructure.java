@@ -16,7 +16,7 @@ interface PubspecStructure extends Serializable {
     @Nonnull
     PubspecEnvironment environment();
 
-    @Nonnull
+    @Nullable
     SemVer version();
 
     @Nullable

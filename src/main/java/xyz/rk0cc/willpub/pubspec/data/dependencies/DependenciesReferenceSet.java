@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-public sealed abstract class DependenciesReferenceSet implements Set<DependencyReference>, Serializable, Cloneable
+sealed abstract class DependenciesReferenceSet implements Set<DependencyReference>, Serializable, Cloneable
         permits ImportedReferenceSet, OverrideReferenceSet {
     private final HashMap<String, DependencyReference> references;
 
