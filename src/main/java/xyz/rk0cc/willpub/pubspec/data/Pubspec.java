@@ -17,9 +17,9 @@ public final class Pubspec implements PubspecStructure {
     private SemVer version;
     private PubspecEnvironment environment;
     private URL homepage, repository, issueTracker, documentation;
-    private ImportedReferenceSet dependencies, devDependencies;
-    private OverrideReferenceSet dependencyOverrides;
-    private Map<String, Object> additionalData;
+    private final ImportedReferenceSet dependencies, devDependencies;
+    private final OverrideReferenceSet dependencyOverrides;
+    private final Map<String, Object> additionalData;
 
     public Pubspec(
             @Nonnull String name,
