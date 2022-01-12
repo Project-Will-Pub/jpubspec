@@ -8,22 +8,17 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.dataformat.yaml.*;
 import xyz.rk0cc.jogu.GitRepositoryURL;
-import xyz.rk0cc.jogu.UnknownGitRepositoryURLTypeException;
-import xyz.rk0cc.josev.NonStandardSemVerException;
 import xyz.rk0cc.josev.SemVer;
+import xyz.rk0cc.josev.SemVerRangeNode;
 import xyz.rk0cc.josev.constraint.pub.PubSemVerConstraint;
-import xyz.rk0cc.willpub.exceptions.pubspec.IllegalPubPackageNamingException;
-import xyz.rk0cc.willpub.exceptions.pubspec.IllegalPubspecConfigurationException;
 import xyz.rk0cc.willpub.pubspec.data.*;
 import xyz.rk0cc.willpub.pubspec.data.dependencies.*;
 import xyz.rk0cc.willpub.pubspec.data.dependencies.type.*;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
-import java.util.function.Predicate;
 
 import static com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
 
@@ -126,80 +121,19 @@ public final class PubspecParser {
                         dependencyOverrides,
                         jsonNodeAFParser(pubspecYAML)
                 );
-            } catch (
-                    IllegalPubspecConfigurationException
-                            | NonStandardSemVerException
-                            | UnknownGitRepositoryURLTypeException e
-            ) {
-                throw new IOException("At least one checked exceptions throws when parsing pubspec.yaml", e);
+            } catch (Exception e) {
+                throw new IOException("At least one exceptions throws when parsing pubspec.yaml", e);
             }
         }
 
         private static void assignDRFromNode(
                 @Nonnull ObjectNode dependenciesNode,
                 @Nonnull DependenciesReferenceSet drs
-        ) throws IllegalPubPackageNamingException, UnknownGitRepositoryURLTypeException, MalformedURLException {
+        ) throws Exception {
             final Iterator<Map.Entry<String, JsonNode>> fields = dependenciesNode.fields();
 
-            while (fields.hasNext()) {
-                Map.Entry<String, JsonNode> entry = fields.next();
-
-                String depName = entry.getKey();
-                JsonNode depRef = entry.getValue();
-
-                switch (DRNodeReference.condition(depRef)) {
-                    case HOSTED -> drs.add(
-                            new HostedReference(
-                                    depName,
-                                    PubSemVerConstraint.parse(depRef.isNull() ? null : depRef.textValue())
-                            )
-                    );
-                    case THIRD_PARTY -> {
-                        JsonNode hosted = depRef.get("hosted");
-                        JsonNode ver = depRef.get("version");
-
-                        if (hosted.isObject())
-                            drs.add(new ThirdPartyHostedReference(
-                                    depName,
-                                    new URL(hosted.get("url").textValue()),
-                                    hosted.get("name").textValue(),
-                                    PubSemVerConstraint.parse(ver.isMissingNode() ? null : ver.textValue())
-                            ));
-                        else if (hosted.isTextual())
-                            drs.add(new ThirdPartyHostedReference(
-                                    depName,
-                                    new URL(hosted.textValue()),
-                                    PubSemVerConstraint.parse(ver.isMissingNode() ? null : ver.textValue())
-                            ));
-                    }
-                    case GIT -> {
-                        JsonNode git = depRef.get("git");
-
-                        if (git.isTextual())
-                            drs.add(new GitReference(depName, GitRepositoryURL.parse(git.textValue())));
-                        else {
-                            JsonNode path = git.get("path"), ref = git.get("ref");
-
-                            drs.add(new GitReference(
-                                    depName,
-                                    GitRepositoryURL.parse(git.get("url").textValue()),
-                                    path.isMissingNode() ? null : path.textValue(),
-                                    ref.isMissingNode() ? null : ref.textValue()
-                            ));
-                        }
-                    }
-                    case LOCAL -> drs.add(new LocalReference(depName, depRef.get("path").textValue()));
-                    case SDK -> {
-                        JsonNode ver = depRef.get("version");
-
-                        drs.add(new SDKReference(
-                                depName,
-                                depRef.get("sdk").textValue(),
-                                PubSemVerConstraint.parse(ver.isMissingNode() ? null : ver.textValue())
-                        ));
-                    }
-                }
-            }
+            while (fields.hasNext())
+                DependencyReferenceDictionary.assignSetInOne(fields.next(), drs);
         }
 
         private static Map<String, Object> jsonNodeAFParser(@Nonnull ObjectNode node) {
@@ -212,6 +146,7 @@ public final class PubspecParser {
     }
 
     public static final class PubspecToYAML extends StdSerializer<Pubspec> {
+
         public PubspecToYAML() {
             this(null);
         }
@@ -228,52 +163,281 @@ public final class PubspecParser {
     }
 }
 
-enum DRNodeReference {
-    HOSTED(jsonNode -> jsonNode.isNull() || jsonNode.isTextual()),
-    THIRD_PARTY(jsonNode -> {
-        if (!jsonNode.isObject()) return false;
+interface DependencyDefinition<D extends DependencyReference> {
+    boolean relatedJsonStructure(@Nonnull JsonNode node);
 
-        JsonNode hosted = jsonNode.get("hosted");
+    boolean isCorrespondedType(@Nonnull DependencyReference ref);
 
-        boolean vh = hosted.isTextual() || (hosted.has("name") || hosted.has("url"));
+    @Nonnull
+    D jsonToDR(@Nonnull String name, @Nonnull JsonNode node) throws Exception;
 
-        JsonNode ver = jsonNode.get("version");
+    void drToJson(
+            @Nonnull ObjectNode dependencyJsonNode,
+            @Nonnull DependencyReference ref,
+            @Nonnull PubSemVerConstraint sdkVC
+    );
+}
 
-        return vh && (ver.isMissingNode() || ver.isTextual());
+enum DependencyReferenceDictionary {
+    HOSTED(new DependencyDefinition<HostedReference>() {
+        @Override
+        public boolean relatedJsonStructure(@Nonnull JsonNode node) {
+            return node.isNull() || node.isTextual();
+        }
+
+        @Override
+        public boolean isCorrespondedType(@Nonnull DependencyReference ref) {
+            return ref.getClass().equals(HostedReference.class);
+        }
+
+        @Nonnull
+        @Override
+        public HostedReference jsonToDR(@Nonnull String name, @Nonnull JsonNode node) throws Exception {
+            return new HostedReference(name, PubSemVerConstraint.parse(node.textValue()));
+        }
+
+        @Override
+        public void drToJson(
+                @Nonnull ObjectNode dependencyJsonNode,
+                @Nonnull DependencyReference ref,
+                @Nonnull PubSemVerConstraint sdkVC
+        ) {
+            dependencyJsonNode.put(ref.name(), ((HostedReference) ref).versionConstraint().rawConstraint());
+        }
     }),
-    GIT(jsonNode -> {
-        if (!jsonNode.isObject()) return false;
+    LOCAL(new DependencyDefinition<LocalReference>() {
+        @Override
+        public boolean relatedJsonStructure(@Nonnull JsonNode node) {
+            JsonNode path = node.get("path");
+            return path != null && path.isTextual();
+        }
 
-        JsonNode git = jsonNode.get("git");
+        @Override
+        public boolean isCorrespondedType(@Nonnull DependencyReference ref) {
+            return ref.getClass().equals(LocalReference.class);
+        }
 
-        if (git.isTextual()) return true;
+        @Nonnull
+        @Override
+        public LocalReference jsonToDR(@Nonnull String name, @Nonnull JsonNode node) throws Exception {
+            return new LocalReference(name, node.get("path").textValue());
+        }
 
-        JsonNode path = git.get("path"), ref = git.get("ref");
+        @Override
+        public void drToJson(
+                @Nonnull ObjectNode dependencyJsonNode,
+                @Nonnull DependencyReference ref,
+                @Nonnull PubSemVerConstraint sdkVC
+        ) {
+            ObjectNode pathNode = PubspecParser.PUBSPEC_MAPPER.createObjectNode();
 
-        return git.get("url").isTextual()
-                && (path.isMissingNode() || path.isTextual())
-                && (ref.isMissingNode() || ref.isTextual());
+            pathNode.put("path", ((LocalReference) ref).path());
+
+            dependencyJsonNode.set(ref.name(), pathNode);
+        }
     }),
-    LOCAL(jsonNode -> jsonNode.get("path").isTextual()),
-    SDK(jsonNode -> {
-        JsonNode ver = jsonNode.get("version");
+    GIT(new DependencyDefinition<GitReference>() {
+        @Override
+        public boolean relatedJsonStructure(@Nonnull JsonNode node) {
+            JsonNode git = node.get("git");
 
-        return jsonNode.get("sdk").isTextual() && (ver.isMissingNode() || ver.isTextual());
+            if (git == null) return false;
+            else if (git.isTextual()) return true;
+
+            JsonNode gitURL = git.get("url");
+
+            return gitURL != null && gitURL.isTextual();
+        }
+
+        @Override
+        public boolean isCorrespondedType(@Nonnull DependencyReference ref) {
+            return ref.getClass().equals(GitReference.class);
+        }
+
+        @Nonnull
+        @Override
+        public GitReference jsonToDR(@Nonnull String name, @Nonnull JsonNode node) throws Exception {
+            JsonNode git = node.get("git");
+
+            return git.isTextual()
+                    ? new GitReference(name, GitRepositoryURL.parse(git.textValue()))
+                    : new GitReference(
+                            name,
+                            GitRepositoryURL.parse(git.get("url").textValue()),
+                            git.get("path") == null ? null : git.get("path").textValue(),
+                            git.get("ref") == null ? null : git.get("ref").textValue()
+                    );
+        }
+
+        @Override
+        public void drToJson(
+                @Nonnull ObjectNode dependencyJsonNode,
+                @Nonnull DependencyReference ref,
+                @Nonnull PubSemVerConstraint sdkVC
+        ) {
+            ObjectNode gitNode = PubspecParser.PUBSPEC_MAPPER.createObjectNode();
+
+            if (((GitReference) ref).path() == null && ((GitReference) ref).ref() == null)
+                gitNode.put("git", ((GitReference) ref).repositoryURL().assembleURL());
+            else {
+                ObjectNode igitNode = PubspecParser.PUBSPEC_MAPPER.createObjectNode();
+
+                igitNode.put("url", ((GitReference) ref).repositoryURL().assembleURL());
+
+                if (((GitReference) ref).path() != null) igitNode.put("path", ((GitReference) ref).path());
+
+                if (((GitReference) ref).ref() != null) igitNode.put("ref", ((GitReference) ref).ref());
+
+                gitNode.set("git", igitNode);
+            }
+
+            dependencyJsonNode.set(ref.name(), gitNode);
+        }
+    }),
+    THIRD_PARTY(new DependencyDefinition<ThirdPartyHostedReference>() {
+        @Override
+        public boolean relatedJsonStructure(@Nonnull JsonNode node) {
+            JsonNode hosted = node.get("hosted");
+
+            if (hosted == null) return false;
+            else if (hosted.isTextual()) return true;
+
+            JsonNode name = hosted.get("name"), url = hosted.get("url");
+
+            return name != null && url != null && name.isTextual() && url.isTextual();
+        }
+
+        @Override
+        public boolean isCorrespondedType(@Nonnull DependencyReference ref) {
+            return ref.getClass().equals(ThirdPartyHostedReference.class);
+        }
+
+        @Nonnull
+        @Override
+        public ThirdPartyHostedReference jsonToDR(@Nonnull String name, @Nonnull JsonNode node) throws Exception {
+            JsonNode hosted = node.get("hosted");
+
+            if (hosted.isTextual()) return new ThirdPartyHostedReference(name, new URL(hosted.textValue()));
+
+            return node.get("version") != null
+                    ? new ThirdPartyHostedReference(
+                            name,
+                            new URL(hosted.get("url").textValue()),
+                            hosted.get("name").textValue(),
+                            PubSemVerConstraint.parse(node.get("version").textValue()))
+                    : new ThirdPartyHostedReference(
+                            name,
+                            new URL(hosted.get("url").textValue()),
+                        hosted.get("name").textValue()
+                    );
+        }
+
+        @Override
+        public void drToJson(
+                @Nonnull ObjectNode dependencyJsonNode,
+                @Nonnull DependencyReference ref,
+                @Nonnull PubSemVerConstraint sdkVC
+        ) {
+            SemVer minSuccinctSDK = new SemVer(2, 15);
+            SemVerRangeNode sdkRN = sdkVC.start();
+
+            final boolean useSuccinct = ThirdPartyHostedReference.SUCCINCT_THIRD_PARTY_HOSTED_FORMAT
+                    && sdkRN.orEquals()
+                    ? sdkRN.semVer().isGreaterOrEquals(minSuccinctSDK)
+                    : sdkRN.semVer().isGreater(minSuccinctSDK);
+
+            ObjectNode tprn = PubspecParser.PUBSPEC_MAPPER.createObjectNode();
+
+            if (useSuccinct && ref.name().equals(((ThirdPartyHostedReference) ref).hostedName()))
+                tprn.put("hosted", ((ThirdPartyHostedReference) ref).repositoryURL().toString());
+            else {
+                ObjectNode itprn = PubspecParser.PUBSPEC_MAPPER.createObjectNode();
+                itprn.put("name", ((ThirdPartyHostedReference) ref).hostedName());
+                itprn.put("url", ((ThirdPartyHostedReference) ref).repositoryURL().toString());
+
+                tprn.set("hosted", itprn);
+            }
+
+            if (((ThirdPartyHostedReference) ref).versionConstraint().rawConstraint() != null)
+                tprn.put("version", ((ThirdPartyHostedReference) ref).versionConstraint().rawConstraint());
+
+            dependencyJsonNode.set(ref.name(), tprn);
+        }
+    }),
+    SDK(new DependencyDefinition<SDKReference>() {
+        @Override
+        public boolean relatedJsonStructure(@Nonnull JsonNode node) {
+            return node.get("sdk") != null && node.get("sdk").isTextual();
+        }
+
+        @Override
+        public boolean isCorrespondedType(@Nonnull DependencyReference ref) {
+            return ref.getClass().equals(SDKReference.class);
+        }
+
+        @Nonnull
+        @Override
+        public SDKReference jsonToDR(@Nonnull String name, @Nonnull JsonNode node) throws Exception {
+            JsonNode ver = node.get("version");
+
+            return ver == null
+                    ? new SDKReference(name, node.get("sdk").textValue())
+                    : new SDKReference(name, node.get("sdk").textValue(), PubSemVerConstraint.parse(ver.textValue()));
+        }
+
+        @Override
+        public void drToJson(
+                @Nonnull ObjectNode dependencyJsonNode,
+                @Nonnull DependencyReference ref,
+                @Nonnull PubSemVerConstraint sdkVC
+        ) {
+            ObjectNode sdkNode = PubspecParser.PUBSPEC_MAPPER.createObjectNode();
+            sdkNode.put("sdk", ((SDKReference) ref).sdk());
+
+            if (((SDKReference) ref).versionConstraint().rawConstraint() != null)
+                sdkNode.put("version", ((SDKReference) ref).versionConstraint().rawConstraint());
+
+            dependencyJsonNode.set(ref.name(), sdkNode);
+        }
     });
 
-    private final Predicate<JsonNode> cond;
+    private final DependencyDefinition<? extends DependencyReference> definition;
 
-    DRNodeReference(@Nonnull Predicate<JsonNode> cond) {
-        this.cond = cond;
+    DependencyReferenceDictionary(@Nonnull DependencyDefinition<? extends DependencyReference> definition) {
+        this.definition = definition;
     }
 
-    static DRNodeReference condition(JsonNode node) {
-        List<DRNodeReference> refs = Arrays.stream(DRNodeReference.values())
-                .filter(drnr -> drnr.cond.test(node))
+    @Nonnull
+    public DependencyReference jsonToRef(@Nonnull Map.Entry<String, JsonNode> jsonNodeEntry) throws Exception {
+        return definition.jsonToDR(jsonNodeEntry.getKey(), jsonNodeEntry.getValue());
+    }
+
+    public void refToJson(@Nonnull DependencyReference ref, @Nonnull ObjectNode json, @Nonnull PubSemVerConstraint sdk) {
+        definition.drToJson(json, ref, sdk);
+    }
+
+    @Nonnull
+    static DependencyReferenceDictionary detectReference(Object detect) {
+        List<DependencyReferenceDictionary> drt = Arrays.stream(DependencyReferenceDictionary.values())
+                .filter(dr -> {
+                    if (detect instanceof JsonNode jn) return dr.definition.relatedJsonStructure(jn);
+                    else if (detect instanceof DependencyReference dro) return dr.definition.isCorrespondedType(dro);
+                    return false;
+                })
                 .toList();
 
-        assert refs.size() == 1;
+        assert drt.size() == 1;
 
-        return refs.get(0);
+        return drt.get(0);
+    }
+
+    @Nonnull
+    static DependencyReferenceDictionary detectByMapEntry(@Nonnull Map.Entry<String, JsonNode> entry) {
+        return detectReference(entry.getValue());
+    }
+
+    static void assignSetInOne(@Nonnull Map.Entry<String, JsonNode> entry, @Nonnull DependenciesReferenceSet drs)
+            throws Exception {
+        drs.add(detectByMapEntry(entry).jsonToRef(entry));
     }
 }

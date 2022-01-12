@@ -9,6 +9,8 @@ import java.net.URL;
 import java.util.Objects;
 
 public final class ThirdPartyHostedReference extends DependencyReference implements VersionConstrainedDependency {
+    public static boolean SUCCINCT_THIRD_PARTY_HOSTED_FORMAT = true;
+
     private final URL repositoryURL;
     private final String hostedName;
     private final PubSemVerConstraint versionConstraint;
