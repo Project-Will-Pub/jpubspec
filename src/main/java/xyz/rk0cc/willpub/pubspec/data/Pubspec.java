@@ -59,6 +59,25 @@ public final class Pubspec implements PubspecStructure {
         this.additionalData = additionalData == null ? new HashMap<>() : new HashMap<>(additionalData);
     }
 
+    public Pubspec(@Nonnull String name, @Nonnull PubspecEnvironment environment)
+            throws IllegalPubPackageNamingException {
+        this(
+                name,
+                environment,
+                null,
+                "none",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+    }
+
     public void modifyName(@Nonnull String name) throws IllegalPubPackageNamingException {
         PubspecValueValidator.ValueAssertion.assertPackageNaming(name);
         this.name = name;
