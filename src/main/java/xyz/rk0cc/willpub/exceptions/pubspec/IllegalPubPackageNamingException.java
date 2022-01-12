@@ -15,9 +15,9 @@ public class IllegalPubPackageNamingException extends IllegalPubspecConfiguratio
     public IllegalPubPackageNamingException(@Nonnull String illegalPackageName) {
        this(illegalPackageName, DEFAULT_MESSAGE);
     }
-    
+
     @Override
-    public String toString() {
-        return super.toString() + "\n\nIllegal package name: " + illegalPackageName;
+    public String getCausedConfigurationMessage() {
+        return "Illegal package name: " + illegalPackageName;
     }
 }
