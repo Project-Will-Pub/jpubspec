@@ -1,18 +1,31 @@
 package xyz.rk0cc.willpub.pubspec.data.dependencies;
 
 import xyz.rk0cc.josev.constraint.pub.PubConstraintPattern;
+import xyz.rk0cc.josev.constraint.pub.PubSemVerConstraint;
+import xyz.rk0cc.willpub.exceptions.pubspec.IllegalVersionConstraintException;
 import xyz.rk0cc.willpub.pubspec.data.dependencies.type.*;
 
 import javax.annotation.Nonnull;
+import java.util.Optional;
 
 public final class OverrideReferenceSet extends DependenciesReferenceSet {
     public OverrideReferenceSet() {
         super();
     }
 
-    public OverrideReferenceSet(@Nonnull DependenciesReferenceSet references) {
+    public OverrideReferenceSet(@Nonnull DependenciesReferenceSet references) throws IllegalVersionConstraintException {
         super(references);
-        assert references.stream().allMatch(OverrideReferenceSet::mustBeAbsoluteVC);
+
+        Optional<PubSemVerConstraint> firstNonAbs = references.stream()
+                .filter(dr -> !mustBeAbsoluteVC(dr))
+                .map(navc -> ((VersionConstrainedDependency) navc).versionConstraint())
+                .findFirst();
+
+        if (firstNonAbs.isPresent())
+            throw new IllegalVersionConstraintException(
+                    "Overriding versioned constraint reference must be absolute",
+                    firstNonAbs.get()
+            );
     }
 
     @Override
@@ -23,7 +36,14 @@ public final class OverrideReferenceSet extends DependenciesReferenceSet {
     @Nonnull
     @Override
     public OverrideReferenceSet clone() {
-        return new OverrideReferenceSet(this);
+        try {
+            return new OverrideReferenceSet(this);
+        } catch (IllegalVersionConstraintException e) {
+            throw new AssertionError(
+                    "Unexpected illegal version constraint exception thrown when cloning reference",
+                    e
+            );
+        }
     }
 
     private static boolean mustBeAbsoluteVC(@Nonnull DependencyReference dependencyReference) {
