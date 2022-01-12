@@ -3,6 +3,7 @@ package xyz.rk0cc.willpub.pubspec.utils;
 import xyz.rk0cc.willpub.exceptions.pubspec.IllegalPubPackageNamingException;
 
 import javax.annotation.Nonnull;
+import java.net.URL;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -52,6 +53,10 @@ public final class PubspecValueValidator {
                         "with"
                 )
                 .noneMatch(packageName::equals);
+    }
+
+    public static boolean httpProtocolOnly(@Nonnull URL url) {
+        return Pattern.matches("^https?$", url.getProtocol());
     }
 
     public static final class ValueAssertion {
