@@ -1,7 +1,7 @@
 package xyz.rk0cc.willpub.pubspec.data.dependencies.type;
 
 import xyz.rk0cc.willpub.exceptions.pubspec.IllegalPubPackageNamingException;
-import xyz.rk0cc.willpub.pubspec.utils.PubspecValueValidator;
+import xyz.rk0cc.willpub.pubspec.PubspecValueValidator;
 
 import javax.annotation.Nonnull;
 import java.io.Serializable;

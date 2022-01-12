@@ -1,4 +1,4 @@
-package xyz.rk0cc.willpub.pubspec.utils;
+package xyz.rk0cc.willpub.pubspec;
 
 import xyz.rk0cc.willpub.exceptions.pubspec.IllegalPubPackageNamingException;
 

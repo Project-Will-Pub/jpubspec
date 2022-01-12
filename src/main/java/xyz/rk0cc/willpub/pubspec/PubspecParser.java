@@ -1,4 +1,4 @@
-package xyz.rk0cc.willpub.pubspec.parser;
+package xyz.rk0cc.willpub.pubspec;
 
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.type.TypeReference;

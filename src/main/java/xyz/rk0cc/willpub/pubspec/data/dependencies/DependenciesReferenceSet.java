@@ -2,7 +2,7 @@ package xyz.rk0cc.willpub.pubspec.data.dependencies;
 
 import xyz.rk0cc.willpub.exceptions.pubspec.IllegalPubPackageNamingException;
 import xyz.rk0cc.willpub.pubspec.data.dependencies.type.DependencyReference;
-import xyz.rk0cc.willpub.pubspec.utils.PubspecValueValidator;
+import xyz.rk0cc.willpub.pubspec.PubspecValueValidator;
 
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
