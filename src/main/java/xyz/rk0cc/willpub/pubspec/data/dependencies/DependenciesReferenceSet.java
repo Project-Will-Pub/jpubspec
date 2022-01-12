@@ -1,6 +1,8 @@
 package xyz.rk0cc.willpub.pubspec.data.dependencies;
 
+import xyz.rk0cc.willpub.exceptions.pubspec.IllegalPubPackageNamingException;
 import xyz.rk0cc.willpub.pubspec.data.dependencies.type.DependencyReference;
+import xyz.rk0cc.willpub.pubspec.utils.PubspecValueValidator;
 
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
@@ -13,13 +15,28 @@ import java.util.stream.Stream;
 public sealed abstract class DependenciesReferenceSet implements Set<DependencyReference>, Serializable, Cloneable
         permits ImportedReferenceSet, OverrideReferenceSet {
     private final HashMap<String, DependencyReference> references;
+    private final boolean unmodifiable;
 
     DependenciesReferenceSet() {
         this.references = new HashMap<>();
+        this.unmodifiable = false;
+    }
+
+    DependenciesReferenceSet(@Nonnull DependenciesReferenceSet references, boolean unmodifiable) {
+        this.references = new HashMap<>(references.references);
+        this.unmodifiable = unmodifiable;
     }
 
     DependenciesReferenceSet(@Nonnull DependenciesReferenceSet references) {
-        this.references = new HashMap<>(references.references);
+        this(references, false);
+    }
+
+    public final boolean isUnmodifiable() {
+        return unmodifiable;
+    }
+
+    private void assertModifiable() {
+        if (unmodifiable) throw new UnsupportedOperationException("Unmodifiable mode enabled");
     }
 
     @Nonnegative
@@ -70,17 +87,23 @@ public sealed abstract class DependenciesReferenceSet implements Set<DependencyR
 
     @Override
     public final boolean add(@Nonnull DependencyReference dependencyReference) {
+        assertModifiable();
+
         return mockAddPassed(dependencyReference)
                 && references.putIfAbsent(dependencyReference.name(), dependencyReference) != null;
     }
 
     public final boolean set(@Nonnull DependencyReference dependencyReference) {
+        assertModifiable();
+
         return mockAddPassed(dependencyReference)
                 && references.put(dependencyReference.name(), dependencyReference) != null;
     }
 
     @Override
     public final boolean remove(@Nonnull Object o) {
+        assertModifiable();
+
         if (o instanceof DependencyReference drt) return references.remove(drt.name(), drt);
         else if (o instanceof String s) return references.remove(s) != null;
         else throw new ClassCastException("'" + o.getClass().getName() + "' can not remove reference in this set");
@@ -98,40 +121,24 @@ public sealed abstract class DependenciesReferenceSet implements Set<DependencyR
         });
     }
 
-    private boolean multipleDRApply(
-            @Nonnull Collection<? extends DependencyReference> c,
-            @Nonnull Consumer<DependencyReference> action
-    ) {
-        Stream<? extends DependencyReference> drs = c.stream();
-
-        if (drs.anyMatch(dr -> !mockAddPassed(dr))) return false;
-
-        drs.forEach(action);
-
-        return true;
-    }
-
     @Override
     public final boolean addAll(@Nonnull Collection<? extends DependencyReference> c) {
-        return multipleDRApply(c, this::add);
-    }
-
-    public final boolean setAll(@Nonnull Collection<? extends DependencyReference> c) {
-        return multipleDRApply(c, this::set);
+        throw new UnsupportedOperationException("This set can not use add all functions");
     }
 
     @Override
     public final boolean retainAll(@Nonnull Collection<?> c) {
-        throw new UnsupportedOperationException("This set can not use retain functions");
+        throw new UnsupportedOperationException("This set can not use retain all functions");
     }
 
     @Override
     public final boolean removeAll(@Nonnull Collection<?> c) {
-        return false;
+        throw new UnsupportedOperationException("This set can not use remove all functions");
     }
 
     @Nonnull
-    public final DependencyReference get(@Nonnull String dependencyName) {
+    public final DependencyReference get(@Nonnull String dependencyName) throws IllegalPubPackageNamingException {
+        PubspecValueValidator.ValueAssertion.assertPackageNaming(dependencyName);
         return Objects.requireNonNull(references.get(dependencyName));
     }
 
@@ -140,7 +147,7 @@ public sealed abstract class DependenciesReferenceSet implements Set<DependencyR
     public final <D extends DependencyReference> D get(
             @Nonnull String dependencyName,
             @Nonnull Class<D> dependencyType
-    ) {
+    ) throws IllegalPubPackageNamingException {
         if (Modifier.isAbstract(dependencyType.getModifiers()))
             throw new IllegalArgumentException("Do not uses abstracted dependency type to apply.");
 
