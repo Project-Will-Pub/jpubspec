@@ -3,13 +3,13 @@ package xyz.rk0cc.willpub.pubspec.parser;
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.*;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.dataformat.yaml.*;
 import xyz.rk0cc.jogu.GitRepositoryURL;
 import xyz.rk0cc.josev.SemVer;
-import xyz.rk0cc.josev.SemVerRangeNode;
 import xyz.rk0cc.josev.constraint.pub.PubSemVerConstraint;
 import xyz.rk0cc.willpub.pubspec.data.*;
 import xyz.rk0cc.willpub.pubspec.data.dependencies.*;
@@ -49,12 +49,15 @@ public final class PubspecParser {
                 .disable(Feature.USE_NATIVE_TYPE_ID)
                 .disable(Feature.CANONICAL_OUTPUT)
                 .disable(Feature.WRITE_DOC_START_MARKER);
-        PUBSPEC_MAPPER = new ObjectMapper(yaml);
+
+        final SimpleModule pubspecMod = new SimpleModule();
+        pubspecMod.addSerializer(Pubspec.class, new PubspecToYAML());
+        pubspecMod.addDeserializer(Pubspec.class, new PubspecFromYAML());
+
+        PUBSPEC_MAPPER = new ObjectMapper(yaml).registerModule(pubspecMod);
     }
 
-
-
-    public static final class PubspecFromYAML extends StdDeserializer<Pubspec> {
+    private static final class PubspecFromYAML extends StdDeserializer<Pubspec> {
         public PubspecFromYAML() {
             this(null);
         }
@@ -63,6 +66,7 @@ public final class PubspecParser {
             super(vc);
         }
 
+        @Nonnull
         @Override
         public Pubspec deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
                 throws IOException {
@@ -145,8 +149,11 @@ public final class PubspecParser {
         ) throws Exception {
             final Iterator<Map.Entry<String, JsonNode>> fields = dependenciesNode.fields();
 
-            while (fields.hasNext())
-                DependencyReferenceDictionary.assignSetInOne(fields.next(), drs);
+            while (fields.hasNext()) {
+                Map.Entry<String, JsonNode> entry = fields.next();
+
+                drs.add(DependencyReferenceDictionary.detectReference(entry.getValue()).jsonToRef(entry));
+            }
         }
 
         private static Map<String, Object> jsonNodeAFParser(@Nonnull ObjectNode node) {
@@ -158,8 +165,7 @@ public final class PubspecParser {
         }
     }
 
-    public static final class PubspecToYAML extends StdSerializer<Pubspec> {
-
+    private static final class PubspecToYAML extends StdSerializer<Pubspec> {
         public PubspecToYAML() {
             this(null);
         }
@@ -169,9 +175,81 @@ public final class PubspecParser {
         }
 
         @Override
-        public void serialize(Pubspec pubspec, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
-                throws IOException {
+        public void serialize(
+                @Nonnull Pubspec pubspec,
+                JsonGenerator jsonGenerator,
+                SerializerProvider serializerProvider
+        ) throws IOException {
+            // Take a snapshot to prevent modification from provider
+            PubspecSnapshot snapshot = PubspecSnapshot.getSnapshotOfCurrentPubspec(pubspec);
+            PubSemVerConstraint sdk = snapshot.environment().sdk();
 
+            assert snapshot.additionalData().keySet().stream().noneMatch(PUBSPEC_YAML_FIELD::contains);
+
+            jsonGenerator.writeStartObject();
+            jsonGenerator.writeStringField("name", snapshot.name());
+
+            if (snapshot.description() != null)
+                jsonGenerator.writeStringField("description", snapshot.description());
+
+            if (snapshot.version() != null)
+                jsonGenerator.writeStringField("version", snapshot.version().value());
+
+            // Env object wrapper
+            jsonGenerator.writeObjectFieldStart("environment");
+            jsonGenerator.writeStringField("sdk", sdk.rawConstraint());
+
+            if (snapshot.environment().flutter() != null)
+                jsonGenerator.writeStringField("flutter", snapshot.environment().flutter().rawConstraint());
+
+            jsonGenerator.writeEndObject();
+            // End env
+
+            if (snapshot.homepage() != null)
+                jsonGenerator.writeStringField("homepage", snapshot.homepage().toString());
+
+            if (snapshot.repository() != null)
+                jsonGenerator.writeStringField("repository", snapshot.repository().toString());
+
+            if (snapshot.issueTracker() != null)
+                jsonGenerator.writeStringField("issue_tracker", snapshot.issueTracker().toString());
+
+            if (snapshot.documentation() != null)
+                jsonGenerator.writeStringField("documentation", snapshot.documentation().toString());
+
+            if (snapshot.dependencies().size() > 0) {
+                jsonGenerator.writeObjectFieldStart("dependencies");
+                writeDRSInJson(snapshot.dependencies(), jsonGenerator, sdk);
+                jsonGenerator.writeEndObject();
+            }
+
+            if (snapshot.devDependencies().size() > 0) {
+                jsonGenerator.writeObjectFieldStart("dev_dependencies");
+                writeDRSInJson(snapshot.devDependencies(), jsonGenerator, sdk);
+                jsonGenerator.writeEndObject();
+            }
+
+            if (snapshot.dependencyOverrides().size() > 0) {
+                jsonGenerator.writeObjectFieldStart("dependency_overrides");
+                writeDRSInJson(snapshot.dependencyOverrides(), jsonGenerator, sdk);
+                jsonGenerator.writeEndObject();
+            }
+
+            // Append remaining additional field
+            jsonGenerator.writeTree(PUBSPEC_MAPPER.valueToTree(snapshot.additionalData()));
+
+            jsonGenerator.writeEndObject();
+        }
+
+        private static void writeDRSInJson(
+                @Nonnull DependenciesReferenceSet drs,
+                @Nonnull JsonGenerator jg,
+                @Nonnull PubSemVerConstraint sdk
+        ) throws IOException {
+            assert drs.size() > 0;
+
+            for (DependencyReference dr : drs)
+                DependencyReferenceDictionary.detectReference(dr).refToJson(dr, jg, sdk);
         }
     }
 }
@@ -453,15 +531,5 @@ enum DependencyReferenceDictionary {
         assert drt.size() == 1;
 
         return drt.get(0);
-    }
-
-    @Nonnull
-    static DependencyReferenceDictionary detectByMapEntry(@Nonnull Map.Entry<String, JsonNode> entry) {
-        return detectReference(entry.getValue());
-    }
-
-    static void assignSetInOne(@Nonnull Map.Entry<String, JsonNode> entry, @Nonnull DependenciesReferenceSet drs)
-            throws Exception {
-        drs.add(detectByMapEntry(entry).jsonToRef(entry));
     }
 }
