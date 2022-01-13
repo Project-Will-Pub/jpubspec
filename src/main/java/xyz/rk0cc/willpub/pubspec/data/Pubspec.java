@@ -11,27 +11,10 @@ import javax.annotation.Nullable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public final class Pubspec implements PubspecStructure {
-    private static final Stream<Class<?>> JSON_LIKED_TYPE = Stream.of(
-            Integer.class,
-            int.class,
-            Long.class,
-            long.class,
-            Float.class,
-            float.class,
-            Double.class,
-            double.class,
-            Byte.class,
-            byte.class,
-            Short.class,
-            short.class,
-            Boolean.class,
-            boolean.class,
-            String.class
-    );
-
     private String name, description, publishTo;
     private SemVer version;
     private PubspecEnvironment environment;
@@ -124,7 +107,7 @@ public final class Pubspec implements PubspecStructure {
 
     public void modifyHomepage(@Nullable URL homepage) {
         if (homepage != null && !PubspecValueValidator.httpProtocolOnly(homepage))
-            throw new HTTPOnlyURLException("Homepage");
+            throw new IllegalArgumentException("URL must be either HTTP or HTTPS");
 
         this.homepage = homepage;
     }
@@ -135,7 +118,7 @@ public final class Pubspec implements PubspecStructure {
 
     public void modifyRepository(@Nullable URL repository) {
         if (repository != null && !PubspecValueValidator.httpProtocolOnly(repository))
-            throw new HTTPOnlyURLException("Repository");
+            throw new IllegalArgumentException("URL must be either HTTP or HTTPS");
 
         this.repository = repository;
     }
@@ -146,7 +129,7 @@ public final class Pubspec implements PubspecStructure {
 
     public void modifyIssueTracker(@Nullable URL issueTracker) {
         if (issueTracker != null && !PubspecValueValidator.httpProtocolOnly(issueTracker))
-            throw new HTTPOnlyURLException("Issue tracker");
+            throw new IllegalArgumentException("URL must be either HTTP or HTTPS");
 
         this.issueTracker = issueTracker;
     }
@@ -157,7 +140,7 @@ public final class Pubspec implements PubspecStructure {
 
     public void modifyDocumentation(@Nullable URL documentation) {
         if (documentation != null && !PubspecValueValidator.httpProtocolOnly(documentation))
-            throw new HTTPOnlyURLException("Documentation");
+            throw new IllegalArgumentException("URL must be either HTTP or HTTPS");
 
         this.documentation = documentation;
     }
@@ -275,24 +258,55 @@ public final class Pubspec implements PubspecStructure {
         return Collections.unmodifiableMap(additionalData);
     }
 
-    @SuppressWarnings({"ConstantConditions", "unchecked"})
     private static boolean isJsonLikedObject(@Nullable Object value) {
-        if (value == null) return true;
-        else if (value instanceof List lv)
-            return lv.stream().allMatch(Pubspec::isJsonLikedObject);
-        else if (value instanceof Map mv)
-            return mv.keySet().stream().allMatch(k -> k instanceof String)
-                    && mv.values().stream().allMatch(Pubspec::isJsonLikedObject);
-        else return JSON_LIKED_TYPE.anyMatch(jlt -> value.getClass().equals(jlt));
+        return PermitAdditionalMapValue.isJsonLiked(value);
     }
 }
 
-final class HTTPOnlyURLException extends IllegalArgumentException {
-    HTTPOnlyURLException(@Nonnull String urlField) {
-        super(
-                String.valueOf(urlField.charAt(0)).toUpperCase()
-                        + urlField.substring(1)
-                        + " only accept HTTP or HTTPS only"
-        );
+final class PermitAdditionalMapValue {
+    private static final Stream<Class<?>> JSON_LIKED_TYPE = Stream.of(
+            Integer.class,
+            int.class,
+            Long.class,
+            long.class,
+            Float.class,
+            float.class,
+            Double.class,
+            double.class,
+            Byte.class,
+            byte.class,
+            Short.class,
+            short.class,
+            Boolean.class,
+            boolean.class,
+            String.class
+    );
+
+    private PermitAdditionalMapValue() {}
+
+    private static final Predicate<Object> conditionDispatcher = i -> {
+        if (i instanceof List<?> nl)
+            return isJsonLikedArray(nl);
+        else if (i instanceof Map<?, ?> nm)
+            return isJsonLikedMap(nm);
+        return isJsonLikedDataType(i);
+    };
+
+    private static boolean isJsonLikedDataType(@Nullable Object v) {
+        if (v == null) return true;
+        return JSON_LIKED_TYPE.anyMatch(jlt -> jlt.equals(v.getClass()));
+    }
+
+    private static boolean isJsonLikedArray(@Nonnull List<?> lv) {
+        return lv.stream().allMatch(conditionDispatcher);
+    }
+
+    private static boolean isJsonLikedMap(@Nonnull Map<?, ?> mv) {
+        return mv.keySet().stream().allMatch(k -> k instanceof String)
+                && mv.values().stream().allMatch(conditionDispatcher);
+    }
+
+    static boolean isJsonLiked(@Nullable Object incomingValue) {
+        return conditionDispatcher.test(incomingValue);
     }
 }
