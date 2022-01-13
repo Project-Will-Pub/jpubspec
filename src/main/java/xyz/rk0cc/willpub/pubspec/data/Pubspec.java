@@ -3,7 +3,6 @@ package xyz.rk0cc.willpub.pubspec.data;
 import xyz.rk0cc.josev.*;
 import xyz.rk0cc.willpub.exceptions.pubspec.*;
 import xyz.rk0cc.willpub.pubspec.data.dependencies.*;
-import xyz.rk0cc.willpub.pubspec.PubspecValueValidator;
 import xyz.rk0cc.willpub.pubspec.parser.PubspecParser;
 
 import javax.annotation.Nonnull;
