@@ -57,7 +57,7 @@ public final class Pubspec implements PubspecStructure {
         } catch (IllegalVersionConstraintException e) {
             throw new IllegalArgumentException("Found illegal version constraint override dependency in the set.", e);
         }
-        this.additionalData = additionalData == null ? new HashMap<>() : new HashMap<>(additionalData);
+        this.additionalData = additionalData == null ? new TreeMap<>() : new TreeMap<>(additionalData);
     }
 
     public Pubspec(@Nonnull String name, @Nonnull PubspecEnvironment environment)
