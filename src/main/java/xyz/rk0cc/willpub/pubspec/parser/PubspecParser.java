@@ -156,12 +156,13 @@ public final class PubspecParser {
             }
         }
 
-        private static Map<String, Object> jsonNodeAFParser(@Nonnull ObjectNode node) {
+        @Nonnull
+        private static LinkedHashMap<String, Object> jsonNodeAFParser(@Nonnull ObjectNode node) {
             ObjectNode dcn = node.deepCopy();
 
             dcn.remove(PUBSPEC_YAML_FIELD);
 
-            return PUBSPEC_MAPPER.convertValue(dcn, new TypeReference<>(){});
+            return new LinkedHashMap<>(PUBSPEC_MAPPER.convertValue(dcn, new TypeReference<Map<String, Object>>(){}));
         }
     }
 
