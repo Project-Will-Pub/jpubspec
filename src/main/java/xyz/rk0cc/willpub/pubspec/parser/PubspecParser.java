@@ -1,4 +1,4 @@
-package xyz.rk0cc.willpub.pubspec;
+package xyz.rk0cc.willpub.pubspec.parser;
 
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -341,7 +341,8 @@ enum DependencyReferenceDictionary {
             SemVer minSuccinctSDK = new SemVer(2, 15);
             SemVerRangeNode sdkRN = sdkVC.start();
 
-            final boolean useSuccinct = ThirdPartyHostedReference.SUCCINCT_THIRD_PARTY_HOSTED_FORMAT
+            final boolean useSuccinct
+                    = PubspecParsePreference.isEnabled(PubspecParsePreference.SUCCINCT_THIRD_PARTY_HOSTED_FORMAT)
                     && sdkRN.orEquals()
                     ? sdkRN.semVer().isGreaterOrEquals(minSuccinctSDK)
                     : sdkRN.semVer().isGreater(minSuccinctSDK);
