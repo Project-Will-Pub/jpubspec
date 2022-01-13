@@ -25,7 +25,20 @@ import static com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
 public final class PubspecParser {
     public static final ObjectMapper PUBSPEC_MAPPER;
 
-    public static final Set<String> PUBSPEC_YAML_FIELD = Set.of();
+    public static final Set<String> PUBSPEC_YAML_FIELD = Set.of(
+            "name",
+            "environment",
+            "version",
+            "description",
+            "publish_to",
+            "homepage",
+            "repository",
+            "issue_tracker",
+            "documentation",
+            "dependencies",
+            "dev_dependencies",
+            "dependency_overrides"
+    );
 
     static {
         final YAMLFactory yaml = new YAMLFactory()
@@ -52,7 +65,7 @@ public final class PubspecParser {
 
         @Override
         public Pubspec deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
-                throws IOException, JacksonException {
+                throws IOException {
             try {
                 ObjectNode pubspecYAML = jsonParser.getCodec().readTree(jsonParser);
                 final String name = pubspecYAML.get("name").textValue();
@@ -172,10 +185,10 @@ interface DependencyDefinition<D extends DependencyReference> {
     D jsonToDR(@Nonnull String name, @Nonnull JsonNode node) throws Exception;
 
     void drToJson(
-            @Nonnull ObjectNode dependencyJsonNode,
+            @Nonnull JsonGenerator dependencyJsonNode,
             @Nonnull DependencyReference ref,
             @Nonnull PubSemVerConstraint sdkVC
-    );
+    ) throws IOException;
 }
 
 enum DependencyReferenceDictionary {
@@ -198,11 +211,14 @@ enum DependencyReferenceDictionary {
 
         @Override
         public void drToJson(
-                @Nonnull ObjectNode dependencyJsonNode,
+                @Nonnull JsonGenerator dependencyJsonNode,
                 @Nonnull DependencyReference ref,
                 @Nonnull PubSemVerConstraint sdkVC
-        ) {
-            dependencyJsonNode.put(ref.name(), ((HostedReference) ref).versionConstraint().rawConstraint());
+        ) throws IOException {
+            String vc = ((HostedReference) ref).versionConstraint().rawConstraint();
+
+            if (vc == null) dependencyJsonNode.writeNullField(ref.name());
+            else dependencyJsonNode.writeStringField(ref.name(), vc);
         }
     }),
     LOCAL(new DependencyDefinition<LocalReference>() {
@@ -225,15 +241,15 @@ enum DependencyReferenceDictionary {
 
         @Override
         public void drToJson(
-                @Nonnull ObjectNode dependencyJsonNode,
+                @Nonnull JsonGenerator dependencyJsonNode,
                 @Nonnull DependencyReference ref,
                 @Nonnull PubSemVerConstraint sdkVC
-        ) {
-            ObjectNode pathNode = PubspecParser.PUBSPEC_MAPPER.createObjectNode();
+        ) throws IOException {
+            String path = ((LocalReference) ref).path();
 
-            pathNode.put("path", ((LocalReference) ref).path());
-
-            dependencyJsonNode.set(ref.name(), pathNode);
+            dependencyJsonNode.writeObjectFieldStart(ref.name());
+            dependencyJsonNode.writeStringField("path", path);
+            dependencyJsonNode.writeEndObject();
         }
     }),
     GIT(new DependencyDefinition<GitReference>() {
@@ -271,27 +287,31 @@ enum DependencyReferenceDictionary {
 
         @Override
         public void drToJson(
-                @Nonnull ObjectNode dependencyJsonNode,
+                @Nonnull JsonGenerator dependencyJsonNode,
                 @Nonnull DependencyReference ref,
                 @Nonnull PubSemVerConstraint sdkVC
-        ) {
-            ObjectNode gitNode = PubspecParser.PUBSPEC_MAPPER.createObjectNode();
+        ) throws IOException {
+            GitReference gref = (GitReference) ref;
+            String url = gref.repositoryURL().assembleURL(),
+                    path = gref.path(),
+                    gitref = gref.ref();
 
-            if (((GitReference) ref).path() == null && ((GitReference) ref).ref() == null)
-                gitNode.put("git", ((GitReference) ref).repositoryURL().assembleURL());
+            dependencyJsonNode.writeObjectFieldStart(ref.name());
+            if (path == null && gitref == null)
+                dependencyJsonNode.writeStringField("git", url);
             else {
-                ObjectNode igitNode = PubspecParser.PUBSPEC_MAPPER.createObjectNode();
+                dependencyJsonNode.writeObjectFieldStart("git");
+                dependencyJsonNode.writeStringField("url", url);
 
-                igitNode.put("url", ((GitReference) ref).repositoryURL().assembleURL());
+                if (path != null)
+                    dependencyJsonNode.writeStringField("path", path);
 
-                if (((GitReference) ref).path() != null) igitNode.put("path", ((GitReference) ref).path());
+                if (gitref != null)
+                    dependencyJsonNode.writeStringField("ref", gitref);
 
-                if (((GitReference) ref).ref() != null) igitNode.put("ref", ((GitReference) ref).ref());
-
-                gitNode.set("git", igitNode);
+                dependencyJsonNode.writeEndObject();
             }
-
-            dependencyJsonNode.set(ref.name(), gitNode);
+            dependencyJsonNode.writeEndObject();
         }
     }),
     THIRD_PARTY(new DependencyDefinition<ThirdPartyHostedReference>() {
@@ -334,35 +354,32 @@ enum DependencyReferenceDictionary {
 
         @Override
         public void drToJson(
-                @Nonnull ObjectNode dependencyJsonNode,
+                @Nonnull JsonGenerator dependencyJsonNode,
                 @Nonnull DependencyReference ref,
                 @Nonnull PubSemVerConstraint sdkVC
-        ) {
-            SemVer minSuccinctSDK = new SemVer(2, 15);
-            SemVerRangeNode sdkRN = sdkVC.start();
+        ) throws IOException {
+            ThirdPartyHostedReference tphref = (ThirdPartyHostedReference) ref;
 
-            final boolean useSuccinct
-                    = PubspecParsePreference.isEnabled(PubspecParsePreference.SUCCINCT_THIRD_PARTY_HOSTED_FORMAT)
-                    && sdkRN.orEquals()
-                    ? sdkRN.semVer().isGreaterOrEquals(minSuccinctSDK)
-                    : sdkRN.semVer().isGreater(minSuccinctSDK);
+            final boolean useSuccinct = PubspecParsePreference.eligible(
+                    PubspecParsePreference.SUCCINCT_THIRD_PARTY_HOSTED_FORMAT,
+                    sdkVC
+            ) && tphref.name().equals(tphref.hostedName());
 
-            ObjectNode tprn = PubspecParser.PUBSPEC_MAPPER.createObjectNode();
+            dependencyJsonNode.writeObjectFieldStart(ref.name());
 
-            if (useSuccinct && ref.name().equals(((ThirdPartyHostedReference) ref).hostedName()))
-                tprn.put("hosted", ((ThirdPartyHostedReference) ref).repositoryURL().toString());
+            if (useSuccinct)
+                dependencyJsonNode.writeStringField("hosted", tphref.hostedName());
             else {
-                ObjectNode itprn = PubspecParser.PUBSPEC_MAPPER.createObjectNode();
-                itprn.put("name", ((ThirdPartyHostedReference) ref).hostedName());
-                itprn.put("url", ((ThirdPartyHostedReference) ref).repositoryURL().toString());
-
-                tprn.set("hosted", itprn);
+                dependencyJsonNode.writeObjectFieldStart("hosted");
+                dependencyJsonNode.writeStringField("name", tphref.hostedName());
+                dependencyJsonNode.writeStringField("url", tphref.repositoryURL().toString());
+                dependencyJsonNode.writeEndObject();
             }
 
-            if (((ThirdPartyHostedReference) ref).versionConstraint().rawConstraint() != null)
-                tprn.put("version", ((ThirdPartyHostedReference) ref).versionConstraint().rawConstraint());
+            if (tphref.versionConstraint().rawConstraint() != null)
+                dependencyJsonNode.writeStringField("version", tphref.versionConstraint().rawConstraint());
 
-            dependencyJsonNode.set(ref.name(), tprn);
+            dependencyJsonNode.writeEndObject();
         }
     }),
     SDK(new DependencyDefinition<SDKReference>() {
@@ -388,17 +405,19 @@ enum DependencyReferenceDictionary {
 
         @Override
         public void drToJson(
-                @Nonnull ObjectNode dependencyJsonNode,
+                @Nonnull JsonGenerator dependencyJsonNode,
                 @Nonnull DependencyReference ref,
                 @Nonnull PubSemVerConstraint sdkVC
-        ) {
-            ObjectNode sdkNode = PubspecParser.PUBSPEC_MAPPER.createObjectNode();
-            sdkNode.put("sdk", ((SDKReference) ref).sdk());
+        ) throws IOException {
+            SDKReference sref = (SDKReference) ref;
 
-            if (((SDKReference) ref).versionConstraint().rawConstraint() != null)
-                sdkNode.put("version", ((SDKReference) ref).versionConstraint().rawConstraint());
+            dependencyJsonNode.writeObjectFieldStart(ref.name());
+            dependencyJsonNode.writeStringField("sdk", sref.sdk());
 
-            dependencyJsonNode.set(ref.name(), sdkNode);
+            if (sref.versionConstraint().rawConstraint() != null)
+                dependencyJsonNode.writeStringField("version", sref.versionConstraint().rawConstraint());
+
+            dependencyJsonNode.writeEndObject();
         }
     });
 
@@ -413,8 +432,12 @@ enum DependencyReferenceDictionary {
         return definition.jsonToDR(jsonNodeEntry.getKey(), jsonNodeEntry.getValue());
     }
 
-    public void refToJson(@Nonnull DependencyReference ref, @Nonnull ObjectNode json, @Nonnull PubSemVerConstraint sdk) {
-        definition.drToJson(json, ref, sdk);
+    public void refToJson(
+            @Nonnull DependencyReference ref,
+            @Nonnull JsonGenerator jsonWriter,
+            @Nonnull PubSemVerConstraint sdk
+    ) throws IOException {
+        definition.drToJson(jsonWriter, ref, sdk);
     }
 
     @Nonnull
