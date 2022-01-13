@@ -4,15 +4,34 @@ import xyz.rk0cc.josev.*;
 import xyz.rk0cc.willpub.exceptions.pubspec.*;
 import xyz.rk0cc.willpub.pubspec.data.dependencies.*;
 import xyz.rk0cc.willpub.pubspec.PubspecValueValidator;
+import xyz.rk0cc.willpub.pubspec.parser.PubspecParser;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Stream;
 
 public final class Pubspec implements PubspecStructure {
+    private static final Stream<Class<?>> JSON_LIKED_TYPE = Stream.of(
+            Integer.class,
+            int.class,
+            Long.class,
+            long.class,
+            Float.class,
+            float.class,
+            Double.class,
+            double.class,
+            Byte.class,
+            byte.class,
+            Short.class,
+            short.class,
+            Boolean.class,
+            boolean.class,
+            String.class
+    );
+
     private String name, description, publishTo;
     private SemVer version;
     private PubspecEnvironment environment;
@@ -147,6 +166,30 @@ public final class Pubspec implements PubspecStructure {
         this.modifyDocumentation(documentation == null ? null : new URL(documentation));
     }
 
+    public boolean appendAdditionalData(@Nonnull String key, @Nullable Object value) {
+        if (PubspecParser.PUBSPEC_YAML_FIELD.contains(key))
+            throw new IllegalArgumentException("'" + key + "' is not an additional field in pubspec");
+        assert isJsonLikedObject(value);
+        additionalData.putIfAbsent(key, value);
+        return additionalData.containsKey(key);
+    }
+
+    public boolean modifyAdditionalData(@Nonnull String key, @Nullable Object value) {
+        if (PubspecParser.PUBSPEC_YAML_FIELD.contains(key))
+            throw new IllegalArgumentException("'" + key + "' is not an additional field in pubspec");
+        assert isJsonLikedObject(value);
+        additionalData.put(key, value);
+        return additionalData.containsKey(key);
+    }
+
+    public boolean removeAdditionalData(@Nonnull String key) {
+        if (PubspecParser.PUBSPEC_YAML_FIELD.contains(key))
+            throw new IllegalArgumentException("'" + key + "' is not an additional field in pubspec");
+        if (!additionalData.containsKey(key)) return false;
+        additionalData.remove(key);
+        return true;
+    }
+
     @Nonnull
     @Override
     public String name() {
@@ -219,10 +262,28 @@ public final class Pubspec implements PubspecStructure {
         return dependencyOverrides;
     }
 
+    @Nullable
+    public Object additionalDataValue(@Nonnull String key) {
+        if (PubspecParser.PUBSPEC_YAML_FIELD.contains(key))
+            throw new IllegalArgumentException("'" + key + "' is not an additional field in pubspec");
+        return additionalData.get(key);
+    }
+
     @Nonnull
     @Override
     public Map<String, Object> additionalData() {
-        return additionalData;
+        return Collections.unmodifiableMap(additionalData);
+    }
+
+    @SuppressWarnings({"ConstantConditions", "unchecked"})
+    private static boolean isJsonLikedObject(@Nullable Object value) {
+        if (value == null) return true;
+        else if (value instanceof List lv)
+            return lv.stream().allMatch(Pubspec::isJsonLikedObject);
+        else if (value instanceof Map mv)
+            return mv.keySet().stream().allMatch(k -> k instanceof String)
+                    && mv.values().stream().allMatch(Pubspec::isJsonLikedObject);
+        else return JSON_LIKED_TYPE.anyMatch(jlt -> value.getClass().equals(jlt));
     }
 }
 
