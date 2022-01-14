@@ -3,11 +3,13 @@ package xyz.rk0cc.willpub.pubspec;
 import xyz.rk0cc.willpub.exceptions.pubspec.ApplyNonPubProjectDirectoryException;
 import xyz.rk0cc.willpub.pubspec.data.Pubspec;
 import xyz.rk0cc.willpub.pubspec.data.PubspecSnapshot;
+import xyz.rk0cc.willpub.pubspec.data.dependencies.type.LocalReference;
 import xyz.rk0cc.willpub.pubspec.parser.PubspecParser;
 
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.NotDirectoryException;
 import java.nio.file.Path;
 
 public class PubspecManager {
@@ -47,4 +49,12 @@ public class PubspecManager {
         savePubspec(PubspecSnapshot.getMutableFromSnapshot(archiver.recentSnapshot()));
     }
 
+    @Nonnull
+    public final File resolvePathOfLocalReference(@Nonnull LocalReference localReference) {
+        try {
+            return localReference.toFile(projectPath);
+        } catch (NotDirectoryException e) {
+            throw new AssertionError("The project path is no longer as a directory unexpectedly", e);
+        }
+    }
 }
