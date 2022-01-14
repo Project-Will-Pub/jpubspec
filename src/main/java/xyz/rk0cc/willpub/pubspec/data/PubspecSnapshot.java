@@ -3,6 +3,7 @@ package xyz.rk0cc.willpub.pubspec.data;
 import xyz.rk0cc.josev.SemVer;
 import xyz.rk0cc.willpub.exceptions.pubspec.*;
 import xyz.rk0cc.willpub.pubspec.data.dependencies.*;
+import xyz.rk0cc.willpub.pubspec.data.dependencies.type.DependencyReference;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -129,6 +130,43 @@ public final class PubspecSnapshot implements PubspecStructure {
     @Override
     public Map<String, Object> additionalData() {
         return additionalData;
+    }
+
+    @SuppressWarnings("UseBulkOperation")
+    public void recoverPubspec(@Nonnull Pubspec pubspec) {
+        try {
+            pubspec.modifyName(name);
+            pubspec.modifyEnvironment(environment);
+            pubspec.modifyPublishTo(publishTo);
+            pubspec.modifyDescription(description);
+            pubspec.modifyHomepage(homepage);
+            pubspec.modifyRepository(repository);
+            pubspec.modifyIssueTracker(issueTracker);
+            pubspec.modifyDocumentation(documentation);
+
+            ImportedReferenceSet dep = pubspec.dependencies();
+            ImportedReferenceSet devDep = pubspec.devDependencies();
+            OverrideReferenceSet depOr = pubspec.dependencyOverrides();
+
+            dep.clear();
+            devDep.clear();
+            depOr.clear();
+
+            for (DependencyReference dr : dependencies)
+                dep.add(dr);
+
+            for (DependencyReference dr : devDependencies)
+                devDep.add(dr);
+
+            for (DependencyReference dr : dependencyOverrides)
+                depOr.add(dr);
+
+            pubspec.clearAllAdditionalData();
+
+            additionalData.forEach(pubspec::modifyAdditionalData);
+        } catch (IllegalPubspecConfigurationException e) {
+            throw new AssertionError("Unexpected illegal pubspec configuration exception thrown", e);
+        }
     }
 
     @Nonnull

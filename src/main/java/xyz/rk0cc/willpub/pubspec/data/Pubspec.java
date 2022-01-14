@@ -257,6 +257,10 @@ public final class Pubspec implements PubspecStructure {
         return Collections.unmodifiableMap(additionalData);
     }
 
+    public void clearAllAdditionalData() {
+        additionalData.clear();
+    }
+
     private static boolean isJsonLikedObject(@Nullable Object value) {
         return PermitAdditionalMapValue.isJsonLiked(value);
     }

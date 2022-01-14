@@ -2,7 +2,7 @@ package xyz.rk0cc.willpub.exceptions.pubspec;
 
 import javax.annotation.Nonnull;
 
-public class IllegalPubspecConfigurationException extends Exception {
+public class IllegalPubspecConfigurationException extends Exception implements PubspecException {
     protected IllegalPubspecConfigurationException(@Nonnull String message) {
         super(message);
     }
@@ -11,6 +11,7 @@ public class IllegalPubspecConfigurationException extends Exception {
         super(message, throwable);
     }
 
+    @Override
     public String getCausedConfigurationMessage() {
         return null;
     }
