@@ -5,11 +5,10 @@ import xyz.rk0cc.willpub.pubspec.data.dependencies.*;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.io.Serializable;
 import java.net.URL;
 import java.util.Map;
 
-interface PubspecStructure extends Serializable {
+interface PubspecStructure {
     @Nonnull
     String name();
 
