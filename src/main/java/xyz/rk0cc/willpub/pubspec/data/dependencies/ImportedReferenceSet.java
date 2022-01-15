@@ -14,7 +14,7 @@ public final class ImportedReferenceSet extends DependenciesReferenceSet {
     }
 
     public ImportedReferenceSet(@Nonnull DependenciesReferenceSet references) {
-        this(references, false);
+        super(references);
     }
 
     @Override

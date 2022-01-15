@@ -29,7 +29,7 @@ public final class OverrideReferenceSet extends DependenciesReferenceSet {
     }
 
     public OverrideReferenceSet(@Nonnull DependenciesReferenceSet references) throws IllegalVersionConstraintException {
-        this(references, false);
+        super(references);
     }
 
     @Override
