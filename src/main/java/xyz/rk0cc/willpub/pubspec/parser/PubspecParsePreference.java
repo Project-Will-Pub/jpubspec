@@ -40,7 +40,7 @@ public enum PubspecParsePreference {
         return enabledPreference.contains(preference);
     }
 
-    public static boolean eligible(@Nonnull PubspecParsePreference preference, @Nonnull PubSemVerConstraint sdk) {
+    static boolean eligible(@Nonnull PubspecParsePreference preference, @Nonnull PubSemVerConstraint sdk) {
         return isEnabled(preference) && preference.sdkCondition.test(sdk);
     }
 }
