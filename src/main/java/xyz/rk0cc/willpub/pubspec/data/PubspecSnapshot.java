@@ -311,7 +311,7 @@ public final class PubspecSnapshot implements PubspecStructure, Serializable {
      *
      * @return A new {@link Pubspec} which using snapshot data.
      * 
-     * @see #recoverPubspec(Pubspec) 
+     * @see #recoverPubspec(Pubspec)
      */
     @Nonnull
     public static Pubspec getMutableFromSnapshot(@Nonnull PubspecSnapshot snapshot) {
