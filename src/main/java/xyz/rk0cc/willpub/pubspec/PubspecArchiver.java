@@ -23,6 +23,9 @@ public final class PubspecArchiver {
 
     public void archivePubspec(@Nonnull Pubspec pubspec) {
         archives.push(new PubspecArchiveNode(PubspecSnapshot.getSnapshotOfCurrentPubspec(pubspec)));
+
+        while (archives.size() > 10) // Limited archived object to same memory space.
+            archives.remove(0);
     }
 
     public void undoArchive() {
