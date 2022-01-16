@@ -86,7 +86,7 @@ public class PubspecManager {
 
     /**
      * Write <code>pubspec.yaml</code> using the latest {@link PubspecArchiver#archivePubspec(Pubspec) archived} version
-     * of {@link Pubspec}.
+     * of {@link Pubspec}. Any older archive will be {@link PubspecArchiver#clearOlderArchive() cleared}.
      *
      * @throws IOException If converting {@link Pubspec} to <code>pubspec.yaml</code> failed.
      */
