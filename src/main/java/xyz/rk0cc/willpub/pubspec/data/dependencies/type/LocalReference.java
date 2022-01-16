@@ -76,6 +76,8 @@ public final class LocalReference extends DependencyReference {
      *
      * @throws NotDirectoryException If {@link File#isDirectory()} return <code>false</code> which means the applied
      *                               path is not a directory.
+     *
+     * @see xyz.rk0cc.willpub.pubspec.PubspecManager#resolvePathOfLocalReference(LocalReference)
      */
     @Nonnull
     public File toFile(@Nonnull Path projectPath) throws NotDirectoryException {
@@ -103,6 +105,8 @@ public final class LocalReference extends DependencyReference {
      *
      * @throws NotDirectoryException If {@link File#isDirectory()} return <code>false</code> which means the applied
      *                               path is not a directory.
+     *
+     * @see xyz.rk0cc.willpub.pubspec.PubspecManager#resolvePathOfLocalReference(LocalReference)
      */
     @Nonnull
     public File toFile(@Nonnull String projectPath) throws NotDirectoryException {
