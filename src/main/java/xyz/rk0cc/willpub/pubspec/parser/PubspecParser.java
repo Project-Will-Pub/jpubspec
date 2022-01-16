@@ -23,9 +23,21 @@ import java.util.*;
 
 import static com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
 
+/**
+ * Handle data conversion between <code>pubspec.yaml</code> and {@link Pubspec}.
+ *
+ * @since 1.0.0
+ */
 public final class PubspecParser {
+    /**
+     * An {@link ObjectMapper} which implemented preference of reading and writing YAML file already.
+     */
     public static final ObjectMapper PUBSPEC_MAPPER;
 
+    /**
+     * A {@link Set} of {@link String} that the field name is implemented already in {@link Pubspec} and do not apply
+     * in {@link Pubspec#additionalData() additional data}.
+     */
     public static final Set<String> PUBSPEC_YAML_FIELD = Set.of(
             "name",
             "environment",
@@ -42,6 +54,7 @@ public final class PubspecParser {
     );
 
     static {
+        // Set YAML preference
         final YAMLFactory yaml = new YAMLFactory()
                 .enable(Feature.MINIMIZE_QUOTES)
                 .enable(Feature.LITERAL_BLOCK_STYLE)
@@ -51,22 +64,38 @@ public final class PubspecParser {
                 .disable(Feature.CANONICAL_OUTPUT)
                 .disable(Feature.WRITE_DOC_START_MARKER);
 
+        // Bind serializer and deserializer
         final SimpleModule pubspecMod = new SimpleModule();
         pubspecMod.addSerializer(Pubspec.class, new PubspecToYAML());
         pubspecMod.addDeserializer(Pubspec.class, new PubspecFromYAML());
 
+        // Initialize mapper
         PUBSPEC_MAPPER = new ObjectMapper(yaml).registerModule(pubspecMod);
     }
 
+    /**
+     * Implemented {@link StdDeserializer} to parsing <code>pubspec.yaml</code> to {@link Pubspec} object.
+     *
+     * @since 1.0.0
+     */
     private static final class PubspecFromYAML extends StdDeserializer<Pubspec> {
-        public PubspecFromYAML() {
+        /**
+         * Construct parser without class declared.
+         */
+        private PubspecFromYAML() {
             this(null);
         }
 
-        public PubspecFromYAML(Class<?> vc) {
+        /**
+         * Construct parser with class declared.
+         */
+        private PubspecFromYAML(Class<?> vc) {
             super(vc);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Nonnull
         @Override
         public Pubspec deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
@@ -144,6 +173,14 @@ public final class PubspecParser {
             }
         }
 
+        /**
+         * Handling conversion between {@link ObjectNode} and {@link DependenciesReferenceSet}.
+         *
+         * @param dependenciesNode A node representing entire dependencies field.
+         * @param drs A {@link DependenciesReferenceSet} pending to applied.
+         *
+         * @throws Exception Any exception thrown during applying dependencies.
+         */
         private static void assignDRFromNode(
                 @Nonnull ObjectNode dependenciesNode,
                 @Nonnull DependenciesReferenceSet drs
@@ -157,6 +194,13 @@ public final class PubspecParser {
             }
         }
 
+        /**
+         * Apply remaining fields in <code>pubspec.yaml</code> which does not declared in {@link Pubspec}.
+         *
+         * @param node Entire <code>pubspec.yaml</code>'s {@link ObjectNode}.
+         *
+         * @return A {@link LinkedHashMap} which filtered out existed field in {@link Pubspec}.
+         */
         @Nonnull
         private static LinkedHashMap<String, Object> jsonNodeAFParser(@Nonnull ObjectNode node) {
             ObjectNode dcn = node.deepCopy();
@@ -167,15 +211,29 @@ public final class PubspecParser {
         }
     }
 
+    /**
+     * Implemented {@link StdSerializer} to writing {@link Pubspec} to <code>pubspec.yaml</code>.
+     *
+     * @since 1.0.0
+     */
     private static final class PubspecToYAML extends StdSerializer<Pubspec> {
-        public PubspecToYAML() {
+        /**
+         * Construct parser without class declared.
+         */
+        private PubspecToYAML() {
             this(null);
         }
 
-        public PubspecToYAML(Class<Pubspec> t) {
+        /**
+         * Construct parser with class declared.
+         */
+        private PubspecToYAML(Class<Pubspec> t) {
             super(t);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void serialize(
                 @Nonnull Pubspec pubspec,
@@ -243,6 +301,17 @@ public final class PubspecParser {
             jsonGenerator.writeEndObject();
         }
 
+        /**
+         * Writing {@link DependenciesReferenceSet} with given {@link JsonGenerator}.
+         *
+         * @param drs Applied {@link DependenciesReferenceSet}.
+         * @param jg {@link JsonGenerator} which come from
+         *           {@link StdSerializer#serialize(Object, JsonGenerator, SerializerProvider)}.
+         * @param sdk Version constraint of Dart SDK to determine is
+         *            {@link PubspecParsePreference#eligible(PubspecParsePreference, PubSemVerConstraint)}.
+         *
+         * @throws IOException Encounter problem when writing dependencies to {@link JsonGenerator}.
+         */
         private static void writeDRSInJson(
                 @Nonnull DependenciesReferenceSet drs,
                 @Nonnull JsonGenerator jg,
@@ -256,14 +325,54 @@ public final class PubspecParser {
     }
 }
 
+/**
+ * Define action with matched {@link DependencyReferenceDictionary}.
+ *
+ * @param <D> Related {@link DependencyReference} for dictionary.
+ *
+ * @since 1.0.0
+ */
 interface DependencyDefinition<D extends DependencyReference> {
+    /**
+     * Check the structure is matched for given reference type.
+     *
+     * @param node A node of dependency reference.
+     *
+     * @return <code>true</code> if is.
+     */
     boolean relatedJsonStructure(@Nonnull JsonNode node);
 
+    /**
+     * Check is corresponded {@link DependencyReference} for this dictonary.
+     *
+     * @param ref {@link DependencyReference} for validation.
+     *
+     * @return <code>true</code> if is.
+     */
     boolean isCorrespondedType(@Nonnull DependencyReference ref);
 
+    /**
+     * Convert {@link JsonNode} to {@link DependencyReference}.
+     *
+     * @param name Dependency name.
+     * @param node Node of this dependency.
+     *
+     * @return Object {@link D} which ready to {@link DependenciesReferenceSet#add(DependencyReference)}.
+     *
+     * @throws Exception When encounter problem during parse.
+     */
     @Nonnull
     D jsonToDR(@Nonnull String name, @Nonnull JsonNode node) throws Exception;
 
+    /**
+     * Writing {@link DependencyReference} to a file.
+     *
+     * @param dependencyJsonNode {@link JsonGenerator} that is using to write dependency info.
+     * @param ref Dependency reference.
+     * @param sdkVC SDK version constraint.
+     *
+     * @throws IOException Encounter problem when writing.
+     */
     void drToJson(
             @Nonnull JsonGenerator dependencyJsonNode,
             @Nonnull DependencyReference ref,
@@ -271,7 +380,15 @@ interface DependencyDefinition<D extends DependencyReference> {
     ) throws IOException;
 }
 
+/**
+ * A dictionary to define the type of {@link DependencyReference}
+ *
+ * @since 1.0.0
+ */
 enum DependencyReferenceDictionary {
+    /**
+     * Refer to {@link HostedReference}.
+     */
     HOSTED(new DependencyDefinition<HostedReference>() {
         @Override
         public boolean relatedJsonStructure(@Nonnull JsonNode node) {
@@ -301,6 +418,9 @@ enum DependencyReferenceDictionary {
             else dependencyJsonNode.writeStringField(ref.name(), vc);
         }
     }),
+    /**
+     * Refer to {@link LocalReference}.
+     */
     LOCAL(new DependencyDefinition<LocalReference>() {
         @Override
         public boolean relatedJsonStructure(@Nonnull JsonNode node) {
@@ -332,6 +452,9 @@ enum DependencyReferenceDictionary {
             dependencyJsonNode.writeEndObject();
         }
     }),
+    /**
+     * Refer to {@link GitReference}.
+     */
     GIT(new DependencyDefinition<GitReference>() {
         @Override
         public boolean relatedJsonStructure(@Nonnull JsonNode node) {
@@ -394,6 +517,9 @@ enum DependencyReferenceDictionary {
             dependencyJsonNode.writeEndObject();
         }
     }),
+    /**
+     * Refer to {@link ThirdPartyHostedReference}.
+     */
     THIRD_PARTY(new DependencyDefinition<ThirdPartyHostedReference>() {
         @Override
         public boolean relatedJsonStructure(@Nonnull JsonNode node) {
@@ -462,6 +588,9 @@ enum DependencyReferenceDictionary {
             dependencyJsonNode.writeEndObject();
         }
     }),
+    /**
+     * Refer to {@link SDKReference}.
+     */
     SDK(new DependencyDefinition<SDKReference>() {
         @Override
         public boolean relatedJsonStructure(@Nonnull JsonNode node) {
@@ -501,17 +630,44 @@ enum DependencyReferenceDictionary {
         }
     });
 
+    /**
+     * An interface that standardize condition and conversion.
+     */
     private final DependencyDefinition<? extends DependencyReference> definition;
 
+    /**
+     * Assign correspond {@link DependencyReference} type with {@link DependencyDefinition}.
+     *
+     * @param definition Define condition and conversion.
+     */
     DependencyReferenceDictionary(@Nonnull DependencyDefinition<? extends DependencyReference> definition) {
         this.definition = definition;
     }
 
+    /**
+     * Convert to {@link DependencyReference} by {@link Map.Entry} which come from {@link JsonNode#fields()}.
+     *
+     * @param jsonNodeEntry An {@link Map.Entry} from {@link JsonNode#fields()}.
+     *
+     * @return Corresponded {@link DependencyReference}.
+     *
+     * @throws Exception When any {@link Exception} thrown during conversion.
+     */
     @Nonnull
     public DependencyReference jsonToRef(@Nonnull Map.Entry<String, JsonNode> jsonNodeEntry) throws Exception {
         return definition.jsonToDR(jsonNodeEntry.getKey(), jsonNodeEntry.getValue());
     }
 
+    /**
+     * Handle {@link DependencyReference} to write into {@link JsonGenerator}.
+     *
+     * @param ref {@link DependencyReference}.
+     * @param jsonWriter {@link JsonGenerator} which bundled with
+     *                   {@link StdSerializer#serialize(Object, JsonGenerator, SerializerProvider)}.
+     * @param sdk Dart SDK version constraint.
+     *
+     * @throws IOException Error encountered when writing to JSON.
+     */
     public void refToJson(
             @Nonnull DependencyReference ref,
             @Nonnull JsonGenerator jsonWriter,
@@ -520,6 +676,14 @@ enum DependencyReferenceDictionary {
         definition.drToJson(jsonWriter, ref, sdk);
     }
 
+    /**
+     * Giving an {@link Object}, and return {@link DependencyReferenceDictionary}'s value depending on what items
+     * contain.
+     *
+     * @param detect An {@link Object} to identify type of {@link DependencyReferenceDictionary}.
+     *
+     * @return A {@link DependencyReferenceDictionary} that pointing to the eligible value.
+     */
     @Nonnull
     static DependencyReferenceDictionary detectReference(Object detect) {
         List<DependencyReferenceDictionary> drt = Arrays.stream(DependencyReferenceDictionary.values())
