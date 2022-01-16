@@ -6,6 +6,7 @@
 
     <name>jpubspec</name>
     <description>Reading and writing pubspec.yaml data on Java</description>
+    <url>https://github.com/Project-Will-Pub/jpubspec</url>
 
     <contributors>
         <contributor>
