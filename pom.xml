@@ -9,6 +9,8 @@
     <packaging>jar</packaging>
     <url>https://github.com/Project-Will-Pub/jpubspec</url>
 
+    <inceptionYear>2022</inceptionYear>
+
     <contributors>
         <contributor>
             <name>Cyrus Chan</name>
