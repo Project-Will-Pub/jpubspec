@@ -11,6 +11,14 @@
 
     <inceptionYear>2022</inceptionYear>
 
+    <licenses>
+        <license>
+            <name>BSD 3-Clause "New" or "Revised" License</name>
+            <url>https://opensource.org/licenses/BSD-3-Clause</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
     <contributors>
         <contributor>
             <name>Cyrus Chan</name>
