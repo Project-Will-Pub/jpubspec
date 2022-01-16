@@ -7,11 +7,30 @@ import xyz.rk0cc.willpub.pubspec.data.dependencies.type.*;
 import javax.annotation.Nonnull;
 import java.util.Optional;
 
+/**
+ * Subclass of {@link DependenciesReferenceSet} that the {@link DependencyReference dependencies} will be overridden
+ * on attached {@link xyz.rk0cc.willpub.pubspec.data.Pubspec}.
+ *
+ * @since 1.0.0
+ */
 public final class OverrideReferenceSet extends DependenciesReferenceSet {
+    /**
+     * Create an empty {@link OverrideReferenceSet}.
+     */
     public OverrideReferenceSet() {
         super();
     }
 
+    /**
+     * Create new {@link OverrideReferenceSet} with existed reference.
+     *
+     * @param references Origin reference.
+     * @param unmodifiable Set as unmodifiable mode.
+     *
+     * @throws IllegalVersionConstraintException If origin reference's {@link DependencyReference dependencies} has
+     *                                           {@link PubSemVerConstraint} which is not using
+     *                                           {@link PubConstraintPattern#ABSOLUTE} pattern.
+     */
     public OverrideReferenceSet(@Nonnull DependenciesReferenceSet references, boolean unmodifiable)
             throws IllegalVersionConstraintException {
         super(references, unmodifiable);
@@ -28,15 +47,30 @@ public final class OverrideReferenceSet extends DependenciesReferenceSet {
             );
     }
 
+    /**
+     * Create new modifiable {@link OverrideReferenceSet} with existed reference.
+     *
+     * @param references Origin reference.
+     *
+     * @throws IllegalVersionConstraintException If origin reference's {@link DependencyReference dependencies} has
+     *                                           {@link PubSemVerConstraint} which is not using
+     *                                           {@link PubConstraintPattern#ABSOLUTE} pattern.
+     */
     public OverrideReferenceSet(@Nonnull DependenciesReferenceSet references) throws IllegalVersionConstraintException {
-        super(references);
+        this(references, false);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     boolean isAllowToAdd(@Nonnull DependencyReference dependencyReference) {
         return mustBeAbsoluteVC(dependencyReference);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Nonnull
     @Override
     public OverrideReferenceSet clone() {
@@ -50,6 +84,14 @@ public final class OverrideReferenceSet extends DependenciesReferenceSet {
         }
     }
 
+    /**
+     * Assertion on single {@link DependencyReference}. If the reference is {@link VersionConstrainedDependency},
+     * {@link VersionConstrainedDependency#versionConstraint()} must be {@link PubConstraintPattern#ABSOLUTE}.
+     *
+     * @param dependencyReference A reference that is going to validation.
+     *
+     * @return <code>true</code> if validated.
+     */
     private static boolean mustBeAbsoluteVC(@Nonnull DependencyReference dependencyReference) {
         if (dependencyReference instanceof VersionConstrainedDependency vcd)
             return vcd.versionConstraint().constraintPattern() == PubConstraintPattern.ABSOLUTE;
