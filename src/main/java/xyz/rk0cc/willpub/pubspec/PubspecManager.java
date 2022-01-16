@@ -92,6 +92,7 @@ public class PubspecManager {
      */
     public final void savePubspecFromLatestArchive() throws IOException {
         savePubspec(PubspecSnapshot.getMutableFromSnapshot(archiver.recentSnapshot()));
+        archiver.clearOlderArchive();
     }
 
     /**
