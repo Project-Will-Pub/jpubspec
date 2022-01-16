@@ -7,21 +7,50 @@ import java.io.File;
 import java.nio.file.*;
 import java.util.Objects;
 
+/**
+ * Getting dependency in local drive only.
+ * <br/>
+ * <h3>WARNING</h3>
+ * The provided {@link #path()} is according to the working device's storage space only which it possibility absent
+ * on other device.
+ *
+ * @since 1.0.0
+ */
 public final class LocalReference extends DependencyReference {
-    private final String path;
+    private final Path path;
 
-    public LocalReference(@Nonnull String name, @Nonnull String path) throws IllegalPubPackageNamingException {
+    /**
+     * Create new {@link LocalReference} dependency info.
+     *
+     * @param name Package name.
+     * @param path Path to the package (in local device).
+     *
+     * @throws IllegalPubPackageNamingException When the package name is illegal.
+     */
+    public LocalReference(@Nonnull String name, @Nonnull Path path) throws IllegalPubPackageNamingException {
         super(name);
         this.path = path;
     }
 
+    /**
+     * Get a {@link String} of the path which located to the dependency package.
+     *
+     * @return Path to the dependency.
+     */
     @Nonnull
-    public String path() {
+    public Path path() {
         return path;
     }
 
+    /**
+     * Change the location to
+     *
+     * @param path
+     *
+     * @return
+     */
     @Nonnull
-    public LocalReference changePath(@Nonnull String path) {
+    public LocalReference changePath(@Nonnull Path path) {
         return DependencyReference.modifyHandler(() -> new LocalReference(name(), path));
     }
 
@@ -29,7 +58,13 @@ public final class LocalReference extends DependencyReference {
     public File toFile(@Nonnull Path projectPath) throws NotDirectoryException {
         final File f = projectPath.resolve(path).toFile();
 
-        if (!f.isDirectory()) throw new NotDirectoryException(f.getAbsolutePath());
+        if (!f.isDirectory())
+            throw new NotDirectoryException(f.getAbsolutePath()) {
+                @Override
+                public String getMessage() {
+                    return "Local reference dependency path must be existed directory";
+                }
+            };
 
         return f;
     }
@@ -50,5 +85,13 @@ public final class LocalReference extends DependencyReference {
     @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), path);
+    }
+
+    @Override
+    public String toString() {
+        return "LocalReference{" +
+                "name='" + name() + '\'' +
+                ", path='" + path + '\'' +
+                '}';
     }
 }

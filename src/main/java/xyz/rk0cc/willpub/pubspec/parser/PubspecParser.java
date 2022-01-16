@@ -18,6 +18,7 @@ import xyz.rk0cc.willpub.pubspec.data.dependencies.type.*;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.util.*;
 
 import static com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
@@ -315,7 +316,7 @@ enum DependencyReferenceDictionary {
         @Nonnull
         @Override
         public LocalReference jsonToDR(@Nonnull String name, @Nonnull JsonNode node) throws Exception {
-            return new LocalReference(name, node.get("path").textValue());
+            return new LocalReference(name, Paths.get(node.get("path").textValue()));
         }
 
         @Override
@@ -324,7 +325,7 @@ enum DependencyReferenceDictionary {
                 @Nonnull DependencyReference ref,
                 @Nonnull PubSemVerConstraint sdkVC
         ) throws IOException {
-            String path = ((LocalReference) ref).path();
+            String path = ((LocalReference) ref).path().toString();
 
             dependencyJsonNode.writeObjectFieldStart(ref.name());
             dependencyJsonNode.writeStringField("path", path);
