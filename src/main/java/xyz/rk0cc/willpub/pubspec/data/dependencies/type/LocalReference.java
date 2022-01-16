@@ -33,7 +33,7 @@ public final class LocalReference extends DependencyReference {
     }
 
     /**
-     * Get a {@link String} of the path which located to the dependency package.
+     * Get a {@link Path} which located to the dependency package.
      *
      * @return Path to the dependency.
      */
@@ -43,19 +43,44 @@ public final class LocalReference extends DependencyReference {
     }
 
     /**
-     * Change the location to
+     * Change the location to related path.
      *
-     * @param path
+     * @param path New {@link Path} of package location.
      *
-     * @return
+     * @return A {@link LocalReference} with new path applied.
      */
     @Nonnull
     public LocalReference changePath(@Nonnull Path path) {
         return DependencyReference.modifyHandler(() -> new LocalReference(name(), path));
     }
 
+    /**
+     * Change the location to related path.
+     *
+     * @param path Path to the package location or first path location.
+     * @param subpath If <code>path</code> is not a completed path, it will be used to join as a complete path.
+     *
+     * @return A {@link LocalReference} with new path applied.
+     */
+    @Nonnull
+    public LocalReference changePath(@Nonnull String path, String... subpath) {
+        return changePath(Paths.get(path, subpath));
+    }
+
+    /**
+     * Resolve an actual {@link File} object of referencing dependency's directory.
+     *
+     * @param projectPath An absolute path of the project directory.
+     *
+     * @return A {@link File} which is a directory of dependency project.
+     *
+     * @throws NotDirectoryException If {@link File#isDirectory()} return <code>false</code> which means the applied
+     *                               path is not a directory.
+     */
     @Nonnull
     public File toFile(@Nonnull Path projectPath) throws NotDirectoryException {
+        assert projectPath.isAbsolute();
+
         final File f = projectPath.resolve(path).toFile();
 
         if (!f.isDirectory())
@@ -69,11 +94,24 @@ public final class LocalReference extends DependencyReference {
         return f;
     }
 
+    /**
+     * Resolve an actual {@link File} object of referencing dependency's directory.
+     *
+     * @param projectPath An absolute path of the project directory.
+     *
+     * @return A {@link File} which is a directory of dependency project.
+     *
+     * @throws NotDirectoryException If {@link File#isDirectory()} return <code>false</code> which means the applied
+     *                               path is not a directory.
+     */
     @Nonnull
     public File toFile(@Nonnull String projectPath) throws NotDirectoryException {
         return toFile(Paths.get(projectPath));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -82,11 +120,19 @@ public final class LocalReference extends DependencyReference {
         return name().equals(that.name()) && path.equals(that.path);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return Hashed {@link #path()} with {@link DependencyReference#hashCode()} added.
+     */
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), path);
+        return super.hashCode() + Objects.hash(path);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         return "LocalReference{" +

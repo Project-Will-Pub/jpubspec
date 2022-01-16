@@ -8,11 +8,29 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Objects;
 
-public final class ThirdPartyHostedReference extends DependencyReference implements VersionConstrainedDependency {
+/**
+ * Referencing the dependency that does not come from default pub server.
+ *
+ * @since 1.0.0
+ *
+ * @see HostedReference
+ */
+public final class ThirdPartyHostedReference extends DependencyReference
+        implements VersionConstrainedDependency<ThirdPartyHostedReference> {
     private final URL repositoryURL;
     private final String hostedName;
     private final PubSemVerConstraint versionConstraint;
 
+    /**
+     * Create new dependency reference from other pub repository.
+     *
+     * @param name Package name.
+     * @param repositoryURL Package hosted pub repository URL.
+     * @param hostedName Package name in hosted repository.
+     * @param versionConstraint Package version constraint.
+     *
+     * @throws IllegalPubPackageNamingException If package name is illegal.
+     */
     public ThirdPartyHostedReference(
             @Nonnull String name,
             @Nonnull URL repositoryURL,
@@ -25,6 +43,15 @@ public final class ThirdPartyHostedReference extends DependencyReference impleme
         this.versionConstraint = versionConstraint;
     }
 
+    /**
+     * Create new dependency reference from other pub repository.
+     *
+     * @param name Package name.
+     * @param repositoryURL Package hosted pub repository URL.
+     * @param versionConstraint Package version constraint.
+     *
+     * @throws IllegalPubPackageNamingException If package name is illegal.
+     */
     public ThirdPartyHostedReference(
             @Nonnull String name,
             @Nonnull URL repositoryURL,
@@ -33,32 +60,69 @@ public final class ThirdPartyHostedReference extends DependencyReference impleme
         this(name, repositoryURL, name, versionConstraint);
     }
 
+    /**
+     * Create new dependency reference from other pub repository.
+     *
+     * @param name Package name.
+     * @param repositoryURL Package hosted pub repository URL.
+     * @param hostedName Package name in hosted repository.
+     *
+     * @throws IllegalPubPackageNamingException If package name is illegal.
+     */
     public ThirdPartyHostedReference(@Nonnull String name, @Nonnull URL repositoryURL, @Nonnull String hostedName)
             throws IllegalPubPackageNamingException {
         this(name, repositoryURL, hostedName, PubSemVerConstraint.parse(null));
     }
 
+    /**
+     * Create new dependency reference from other pub repository.
+     *
+     * @param name Package name.
+     * @param repositoryURL Package hosted pub repository URL.
+     *
+     * @throws IllegalPubPackageNamingException If package name is illegal.
+     */
     public ThirdPartyHostedReference(@Nonnull String name, @Nonnull URL repositoryURL)
             throws IllegalPubPackageNamingException {
         this(name, repositoryURL, name);
     }
 
+    /**
+     * Get a URL of pub repository which using to grab this package.
+     *
+     * @return Location of pub repository.
+     */
     @Nonnull
     public URL repositoryURL() {
         return repositoryURL;
     }
 
+    /**
+     * A package name on the hosted repository.
+     *
+     * @return A {@link String} of package name.
+     */
     @Nonnull
     public String hostedName() {
         return hostedName;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Nonnull
     @Override
     public PubSemVerConstraint versionConstraint() {
         return versionConstraint;
     }
 
+    /**
+     * Change another repository URL to download this package.
+     *
+     * @param repositoryURL URL of pub repository.
+     *
+     * @return {@link ThirdPartyHostedReference} with applied URL.
+     */
     @Nonnull
     public ThirdPartyHostedReference changeRepositoryURL(@Nonnull URL repositoryURL) {
         return DependencyReference.modifyHandler(
@@ -66,27 +130,48 @@ public final class ThirdPartyHostedReference extends DependencyReference impleme
         );
     }
 
+    /**
+     * Change another repository URL to download this package.
+     *
+     * @param repositoryURL URL of pub repository.
+     *
+     * @return {@link ThirdPartyHostedReference} with applied URL.
+     *
+     * @throws MalformedURLException If parsed URL is not a valid {@link URL#URL(String)}.
+     */
     @Nonnull
-    public ThirdPartyHostedReference changeRepositoryURL(@Nonnull String repositoryURL) {
-        try {
-            return changeRepositoryURL(new URL(repositoryURL));
-        } catch (MalformedURLException e) {
-            throw new IllegalArgumentException(e);
-        }
+    public ThirdPartyHostedReference changeRepositoryURL(@Nonnull String repositoryURL) throws MalformedURLException {
+        return changeRepositoryURL(new URL(repositoryURL));
     }
 
+    /**
+     * Change the package name in remote pub repository.
+     *
+     * @param hostedName Name of the package in repository.
+     *
+     * @return A {@link ThirdPartyHostedReference} with applied host name.
+     *
+     * @throws IllegalPubPackageNamingException If host name is illegal.
+     */
     @Nonnull
-    public ThirdPartyHostedReference changeHostedName(@Nonnull String hostedName) {
-        return DependencyReference.modifyHandler(
-                () -> new ThirdPartyHostedReference(name(), repositoryURL, hostedName, versionConstraint)
-        );
+    public ThirdPartyHostedReference changeHostedName(@Nonnull String hostedName)
+            throws IllegalPubPackageNamingException {
+        return new ThirdPartyHostedReference(name(), repositoryURL, hostedName, versionConstraint);
     }
 
+    /**
+     * Change the host name to the same with {@link #name()}.
+     *
+     * @return Applied {@link ThirdPartyHostedReference} which {@link #hostedName()} is the same with {@link #name()}.
+     */
     @Nonnull
     public ThirdPartyHostedReference changeHostedName() {
-        return changeHostedName(name());
+        return DependencyReference.modifyHandler(() -> changeHostedName(name()));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Nonnull
     @Override
     public ThirdPartyHostedReference changeVersionConstraint(@Nonnull PubSemVerConstraint versionConstraint) {
@@ -95,6 +180,9 @@ public final class ThirdPartyHostedReference extends DependencyReference impleme
         );
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -106,16 +194,25 @@ public final class ThirdPartyHostedReference extends DependencyReference impleme
                 && versionConstraint.equals(that.versionConstraint);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return Hashed {@link #repositoryURL()}, {@link #hostedName()} and {@link #versionConstraint()} with
+     *         {@link DependencyReference#hashCode()} added.
+     */
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), repositoryURL, hostedName, versionConstraint);
+        return super.hashCode() + Objects.hash(repositoryURL, hostedName, versionConstraint);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Nonnull
     @Override
     public String toString() {
         return "ThirdPartyHostedReference{" +
-                "name=" + name() +
+                "name='" + name() + '\'' +
                 ", repositoryURL=" + repositoryURL +
                 ", hostedName='" + hostedName + '\'' +
                 ", versionConstraint=" + versionConstraint +
