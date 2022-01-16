@@ -12,35 +12,74 @@ import java.io.IOException;
 import java.nio.file.NotDirectoryException;
 import java.nio.file.Path;
 
+/**
+ * Manager of single <code>pubspec.yaml</code> with giving project {@link Path}.
+ * <br/>
+ * Each {@link PubspecManager} representing a single {@link Path} of the Dart project with can not mix uses.
+ *
+ * @since 1.0.0
+ */
 public class PubspecManager {
     private final Path projectPath;
     private final PubspecArchiver archiver;
 
+    /**
+     * Create new instance of {@link PubspecManager} with given project {@link Path}.
+     *
+     * @param projectPath A {@link Path} of directory which contains <code>pubspec.yaml</code>.
+     *
+     * @throws ApplyNonPubProjectDirectoryException If applied <code>projectPath</code> return <code>false</code> for
+     *                                              {@link File#isDirectory()} and {@link Path#isAbsolute()}.
+     */
     public PubspecManager(@Nonnull Path projectPath) throws ApplyNonPubProjectDirectoryException {
-        if (!projectPath.isAbsolute()
-                || !projectPath.toFile().isDirectory()
-                || !projectPath.resolve("pubspec.yaml").toFile().isFile()
-        ) throw new ApplyNonPubProjectDirectoryException(projectPath);
+        if (!projectPath.isAbsolute() || !projectPath.toFile().isDirectory())
+            throw new ApplyNonPubProjectDirectoryException(projectPath);
 
         this.projectPath = projectPath;
         this.archiver = new PubspecArchiver(projectPath);
     }
 
+    /**
+     * Resolve <code>pubspec.yaml</code> as Java object {@link File}.
+     *
+     * @return A {@link File} of <code>pubspec.yaml</code> which resolve from project path.
+     */
     @Nonnull
     public final File pubspecYAML() {
         return projectPath.resolve("pubspec.yaml").toFile();
     }
 
+    /**
+     * Get an archive manager for each {@link Pubspec}'s edit.
+     *
+     * @return {@link PubspecArchiver} with {@link PubspecSnapshot archived Pubspec} data.
+     */
     @Nonnull
     public final PubspecArchiver archiver() {
         assert archiver.projectPath().equals(projectPath);
         return archiver;
     }
 
+    /**
+     * Read <code>pubspec.yaml</code> in current directory and convert to {@link Pubspec} for editing in Java.
+     *
+     * @return {@link Pubspec} context.
+     *
+     * @throws IOException If problem encountered during
+     *                     {@link com.fasterxml.jackson.databind.ObjectMapper#readValue(File, Class)}.
+     */
+    @Nonnull
     public final Pubspec loadPubspec() throws IOException {
         return PubspecParser.PUBSPEC_MAPPER.readValue(pubspecYAML(), Pubspec.class);
     }
 
+    /**
+     * Write {@link Pubspec} to a file.
+     *
+     * @param pubspec A modified {@link Pubspec}
+     *
+     * @throws IOException
+     */
     public final void savePubspec(@Nonnull Pubspec pubspec) throws IOException {
         PubspecParser.PUBSPEC_MAPPER.writeValue(pubspecYAML(), pubspec);
     }

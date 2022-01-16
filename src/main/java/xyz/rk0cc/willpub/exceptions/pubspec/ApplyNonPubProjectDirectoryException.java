@@ -23,9 +23,7 @@ public class ApplyNonPubProjectDirectoryException extends IOException implements
      */
     public ApplyNonPubProjectDirectoryException(@Nonnull Path appliedPath) {
         super("Applied directory is not a validated pub project file");
-        assert !appliedPath.isAbsolute()
-                || !appliedPath.toFile().isDirectory()
-                || !appliedPath.resolve("pubspec.yaml").toFile().isFile();
+        assert !appliedPath.isAbsolute() || !appliedPath.toFile().isDirectory();
         this.appliedPath = appliedPath;
     }
 
