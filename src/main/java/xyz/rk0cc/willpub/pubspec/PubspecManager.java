@@ -78,16 +78,29 @@ public class PubspecManager {
      *
      * @param pubspec A modified {@link Pubspec}
      *
-     * @throws IOException
+     * @throws IOException If converting {@link Pubspec} to <code>pubspec.yaml</code> failed.
      */
     public final void savePubspec(@Nonnull Pubspec pubspec) throws IOException {
         PubspecParser.PUBSPEC_MAPPER.writeValue(pubspecYAML(), pubspec);
     }
 
+    /**
+     * Write <code>pubspec.yaml</code> using the latest {@link PubspecArchiver#archivePubspec(Pubspec) archived} version
+     * of {@link Pubspec}.
+     *
+     * @throws IOException If converting {@link Pubspec} to <code>pubspec.yaml</code> failed.
+     */
     public final void savePubspecFromLatestArchive() throws IOException {
         savePubspec(PubspecSnapshot.getMutableFromSnapshot(archiver.recentSnapshot()));
     }
 
+    /**
+     * Resolve {@link LocalReference#path()} to actual {@link File} object.
+     *
+     * @param localReference A reference that want to get a {@link File}.
+     *
+     * @return A {@link File} with resolved path from current project directory.
+     */
     @Nonnull
     public final File resolvePathOfLocalReference(@Nonnull LocalReference localReference) {
         try {
