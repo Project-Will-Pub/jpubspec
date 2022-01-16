@@ -3,6 +3,10 @@ on:
   push:
     branches:
       - main
+    paths:
+      - src/**
+      - pom.xml
+      - .github/workflows/codeql.yml
   pull_request:
     branches:
       - main
