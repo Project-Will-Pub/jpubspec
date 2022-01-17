@@ -14,7 +14,7 @@
                 <list>
                   <Item>
                     <option name="directory" value="true" />
-                    <option name="path" value="src/test/resources/xyz/rk0cc/willpub/pubspec" />
+                    <option name="path" value="src/test/resources/xyz/rk0cc/willpub/pubspec/parser/" />
                     <option name="mappingKind" value="Directory" />
                   </Item>
                 </list>
