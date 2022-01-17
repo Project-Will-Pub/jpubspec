@@ -87,7 +87,7 @@ public final class PubspecParser {
      *
      * @since 1.0.0
      */
-    private static final class PubspecFromYAML extends StdDeserializer<Pubspec> {
+    public static final class PubspecFromYAML extends StdDeserializer<Pubspec> {
         /**
          * Construct parser without class declared.
          */
@@ -225,7 +225,7 @@ public final class PubspecParser {
      *
      * @since 1.0.0
      */
-    private static final class PubspecToYAML extends StdSerializer<Pubspec> {
+    public static final class PubspecToYAML extends StdSerializer<Pubspec> {
         /**
          * Construct parser without class declared.
          */
