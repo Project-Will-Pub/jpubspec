@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.*;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.ser.std.MapSerializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.dataformat.yaml.*;
 import xyz.rk0cc.jogu.GitRepositoryURL;
@@ -16,10 +17,12 @@ import xyz.rk0cc.willpub.pubspec.data.dependencies.*;
 import xyz.rk0cc.willpub.pubspec.data.dependencies.type.*;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.function.Function;
 
 import static com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
 
@@ -302,7 +305,10 @@ public final class PubspecParser {
             }
 
             // Append remaining additional field
-            jsonGenerator.writeTree(PUBSPEC_MAPPER.valueToTree(snapshot.additionalData()));
+            for (Map.Entry<String, Object> adE : snapshot.additionalData().entrySet()) {
+                jsonGenerator.writeFieldName(adE.getKey());
+                jsonGenerator.writeObject(adE.getValue());
+            }
 
             jsonGenerator.writeEndObject();
         }

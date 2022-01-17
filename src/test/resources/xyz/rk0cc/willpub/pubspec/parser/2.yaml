@@ -11,6 +11,6 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_calendar_structre: ^1.1.1
-  cupertino_calendar_month_view: ^1.0.2
+  cupertino_calendar_month_view:
   cupertino_calendar_date_reminds_view: ^1.0.3
 flutter:

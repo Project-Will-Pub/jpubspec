@@ -2,6 +2,7 @@ package xyz.rk0cc.willpub.pubspec.data.dependencies.type;
 
 import xyz.rk0cc.josev.constraint.pub.PubSemVerConstraint;
 import xyz.rk0cc.willpub.exceptions.pubspec.IllegalPubPackageNamingException;
+import xyz.rk0cc.willpub.pubspec.data.Pubspec;
 
 import javax.annotation.Nonnull;
 import java.net.MalformedURLException;
@@ -13,6 +14,10 @@ import java.util.Objects;
  * <br/>
  * The dependencies will be grabbed on environment variable <code>PUB_HOSTED_URL</code> which is
  * <a href="https://pub.dev"><code>pub.dev</code></a> by default.
+ * <br/>
+ * Note that if applied {@link #versionConstraint()} is {@link xyz.rk0cc.josev.constraint.pub.PubConstraintPattern#ANY},
+ * {@link xyz.rk0cc.willpub.pubspec.PubspecManager#savePubspec(Pubspec) exported file} will apply value as
+ * <code>null</code>, not a key with no value.
  *
  * @since 1.0.0
  *

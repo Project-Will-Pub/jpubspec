@@ -1,16 +1,25 @@
 package xyz.rk0cc.willpub.pubspec.parser;
 
 import org.junit.jupiter.api.*;
+import xyz.rk0cc.josev.NonStandardSemVerException;
 import xyz.rk0cc.josev.constraint.pub.PubConstraintPattern;
+import xyz.rk0cc.josev.constraint.pub.PubSemVerConstraint;
 import xyz.rk0cc.willpub.exceptions.pubspec.IllegalPubspecConfigurationException;
 import xyz.rk0cc.willpub.pubspec.data.Pubspec;
+import xyz.rk0cc.willpub.pubspec.data.PubspecEnvironment;
 import xyz.rk0cc.willpub.pubspec.data.dependencies.type.*;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SuppressWarnings({"ConstantConditions", "ResultOfMethodCallIgnored"})
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@DoNotRemoveAutogenFile
 final class PubspecParserTest {
     @DisplayName("Test 1.yaml")
     @Order(1)
@@ -56,6 +65,57 @@ final class PubspecParserTest {
             assertTrue(py2.containsKeyInAdditionalData("flutter"));
         } catch (IOException | IllegalPubspecConfigurationException e) {
             fail(e);
+        }
+    }
+
+    @DisplayName("Test create YAML by Java only")
+    @Order(3)
+    @Test
+    void testWrite() {
+        try {
+            File pendingWriteFile = Paths.get(getClass().getResource("PubspecParserTest.class").toURI())
+                            .getParent()
+                            .resolve("auto1.yaml")
+                            .toFile();
+
+            System.out.println(pendingWriteFile.getAbsolutePath());
+
+            if (!pendingWriteFile.exists()) {
+                pendingWriteFile.createNewFile();
+            }
+
+            Pubspec wP = new Pubspec("autogen_pubspec", new PubspecEnvironment(
+                    PubSemVerConstraint.parse(">=2.15.0 <3.0.0")
+            ));
+
+            wP.modifyDescription("I created by jpubspec lol.");
+            wP.modifyVersion("1.2.3");
+            wP.dependencies().set(new HostedReference("path", PubSemVerConstraint.parse("^1.8.0")));
+            wP.modifyAdditionalData("flutter", null);
+
+            PubspecParser.PUBSPEC_MAPPER.writeValue(pendingWriteFile, wP);
+
+            assertTrue(true);
+        } catch (
+                IllegalPubspecConfigurationException | IOException | NonStandardSemVerException | URISyntaxException e
+        ) {
+            fail(e);
+        }
+    }
+
+    @AfterAll
+    static void cleanAutogenFile() {
+        Set<String> autoGenFileName = Set.of(
+                "auto1.yaml"
+        );
+        if (PubspecParserTest.class.getDeclaredAnnotation(DoNotRemoveAutogenFile.class) == null) {
+            for (String fn : autoGenFileName) {
+                try {
+                    new File(PubspecParserTest.class.getResource(fn).toURI()).delete();
+                } catch (URISyntaxException | NullPointerException | SecurityException e) {
+                    System.out.println("\u001B[33mDelete operation failed due to exception thrown, ignore " + fn + "\u001B[33m");
+                }
+            }
         }
     }
 }
