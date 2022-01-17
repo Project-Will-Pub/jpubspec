@@ -7,7 +7,7 @@
           <value>
             <SchemaInfo>
               <option name="generatedName" value="New Schema" />
-              <option name="name" value="Mock pubspec schema" />
+              <option name="name" value="pubspec.yaml" />
               <option name="relativePathToSchema" value="https://json.schemastore.org/pubspec.json" />
               <option name="schemaVersion" value="JSON Schema version 7" />
               <option name="patterns">

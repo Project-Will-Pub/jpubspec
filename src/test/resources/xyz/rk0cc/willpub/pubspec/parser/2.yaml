@@ -1,0 +1,16 @@
+name: mock_cupertino_calendar
+description: A calendar widget special design for Cupertino UI in Flutter which uses as test
+version: 1.0.0+1
+homepage: https://www.rk0cc.xyz
+repository: https://github.com/rk0cc/cupertino_calendar
+issue_tracker: https://github.com/rk0cc/cupertino_calendar/issues
+environment:
+  sdk: ">=2.14.0 <3.0.0"
+  flutter: ">=2.5.0"
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_calendar_structre: ^1.1.1
+  cupertino_calendar_month_view: ^1.0.2
+  cupertino_calendar_date_reminds_view: ^1.0.3
+flutter:
