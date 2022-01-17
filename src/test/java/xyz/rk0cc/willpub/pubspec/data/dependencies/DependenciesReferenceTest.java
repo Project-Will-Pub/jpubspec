@@ -5,9 +5,7 @@ import xyz.rk0cc.jogu.GitRepositoryURL;
 import xyz.rk0cc.jogu.UnknownGitRepositoryURLTypeException;
 import xyz.rk0cc.josev.constraint.pub.PubSemVerConstraint;
 import xyz.rk0cc.willpub.exceptions.pubspec.IllegalPubspecConfigurationException;
-import xyz.rk0cc.willpub.pubspec.data.dependencies.type.GitReference;
-import xyz.rk0cc.willpub.pubspec.data.dependencies.type.HostedReference;
-import xyz.rk0cc.willpub.pubspec.data.dependencies.type.SDKReference;
+import xyz.rk0cc.willpub.pubspec.data.dependencies.type.*;
 
 import javax.annotation.Nonnull;
 
