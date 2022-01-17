@@ -1,5 +1,6 @@
 package xyz.rk0cc.willpub.pubspec.data.dependencies;
 
+import com.google.common.base.Joiner;
 import xyz.rk0cc.willpub.exceptions.pubspec.IllegalPubPackageNamingException;
 import xyz.rk0cc.willpub.pubspec.data.dependencies.type.DependencyReference;
 import xyz.rk0cc.willpub.pubspec.data.PubspecValueValidator;
@@ -8,12 +9,10 @@ import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import java.io.Serializable;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
+import java.util.function.*;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * Contains multiple {@link DependencyReference} as a {@link Set}.
@@ -107,7 +106,27 @@ public sealed abstract class DependenciesReferenceSet implements Set<DependencyR
     @Nonnull
     @Override
     public final Iterator<DependencyReference> iterator() {
-        return toNativeSet().iterator();
+        final DependenciesReferenceSet cIDR = clone();
+        return new Iterator<>() {
+            private int handleIdx = 0;
+
+            @Override
+            public boolean hasNext() {
+                return handleIdx < cIDR.size();
+            }
+
+            @Override
+            public DependencyReference next() {
+                return cIDR.references.values().toArray(new DependencyReference[]{})[handleIdx++];
+            }
+
+            @Override
+            public void remove() {
+                String[] kSet = references.keySet().toArray(new String[]{});
+                assert kSet.length == size();
+                references.remove(kSet[handleIdx]);
+            }
+        };
     }
 
     /**
@@ -149,8 +168,9 @@ public sealed abstract class DependenciesReferenceSet implements Set<DependencyR
         if (!isAllowToAdd(dependencyReference)) return false;
 
         HashMap<String, DependencyReference> dummy = new HashMap<>();
+        dummy.put(dependencyReference.name(), dependencyReference);
 
-        return dummy.put(dependencyReference.name(), dependencyReference) != null;
+        return dummy.containsKey(dependencyReference.name());
     }
 
     /**
@@ -167,8 +187,11 @@ public sealed abstract class DependenciesReferenceSet implements Set<DependencyR
     public final boolean add(@Nonnull DependencyReference dependencyReference) {
         assertModifiable();
 
-        return mockAddPassed(dependencyReference)
-                && references.putIfAbsent(dependencyReference.name(), dependencyReference) != null;
+        if (references.containsKey(dependencyReference.name())) return false;
+
+        if (mockAddPassed(dependencyReference)) references.putIfAbsent(dependencyReference.name(), dependencyReference);
+
+        return references.containsKey(dependencyReference.name());
     }
 
     /**
@@ -184,8 +207,9 @@ public sealed abstract class DependenciesReferenceSet implements Set<DependencyR
     public final boolean set(@Nonnull DependencyReference dependencyReference) {
         assertModifiable();
 
-        return mockAddPassed(dependencyReference)
-                && references.put(dependencyReference.name(), dependencyReference) != null;
+        if (mockAddPassed(dependencyReference)) references.put(dependencyReference.name(), dependencyReference);
+
+        return references.containsKey(dependencyReference.name());
     }
 
     /**
@@ -257,18 +281,20 @@ public sealed abstract class DependenciesReferenceSet implements Set<DependencyR
      */
     @Override
     public final boolean retainAll(@Nonnull Collection<?> c) {
-        if (!((ParameterizedType) c.getClass().getGenericSuperclass()).getActualTypeArguments()[0].equals(String.class))
+        if (!allStringCollection(c))
             throw new ClassCastException("Retain all only accept String as reference");
         return removeIf(dr -> c.stream().noneMatch(rmN -> rmN.equals(dr.name())));
     }
 
     /**
      * {@inheritDoc}
+     * <br/>
+     * However, to reduce complication of retaining items, the {@link Collection} items must be {@link String} only.
      */
     @Override
     public final boolean removeAll(@Nonnull Collection<?> c) {
-        if (!((ParameterizedType) c.getClass().getGenericSuperclass()).getActualTypeArguments()[0].equals(String.class))
-            throw new ClassCastException("Retain all only accept String as reference");
+        if (!allStringCollection(c))
+            throw new ClassCastException("Remove all only accept String as reference");
         return removeIf(dr -> c.stream().anyMatch(rmN -> rmN.equals(dr.name())));
     }
 
@@ -277,16 +303,14 @@ public sealed abstract class DependenciesReferenceSet implements Set<DependencyR
      */
     @Override
     public final boolean removeIf(Predicate<? super DependencyReference> filter) {
-        AtomicBoolean removed = new AtomicBoolean(false);
-
-        references.forEach((name, dr) -> {
+        boolean removed = false;
+        for (DependencyReference dr : this) {
             if (filter.test(dr)) {
-                references.remove(name);
-                removed.set(true);
+                remove(dr);
+                removed = true;
             }
-        });
-
-        return removed.get();
+        }
+        return removed;
     }
 
     /**
@@ -355,24 +379,27 @@ public sealed abstract class DependenciesReferenceSet implements Set<DependencyR
      * {@inheritDoc}
      */
     @Override
+    @Nonnull
     public final Spliterator<DependencyReference> spliterator() {
-        return toNativeSet().spliterator();
+        return Spliterators.spliteratorUnknownSize(iterator(), 0);
     }
 
     /**
      * {@inheritDoc}
      */
+    @Nonnull
     @Override
     public final Stream<DependencyReference> stream() {
-        return toNativeSet().stream();
+        return StreamSupport.stream(spliterator(), false);
     }
 
     /**
      * {@inheritDoc}
      */
+    @Nonnull
     @Override
     public final Stream<DependencyReference> parallelStream() {
-        return toNativeSet().parallelStream();
+        return StreamSupport.stream(spliterator(), true);
     }
 
     /**
@@ -380,7 +407,9 @@ public sealed abstract class DependenciesReferenceSet implements Set<DependencyR
      */
     @Override
     public final void forEach(@Nonnull Consumer<? super DependencyReference> action) {
-        toNativeSet().forEach(action);
+        for (DependencyReference dependencyReference : this) {
+            action.accept(dependencyReference);
+        }
     }
 
     /**
@@ -401,4 +430,15 @@ public sealed abstract class DependenciesReferenceSet implements Set<DependencyR
      */
     @Override
     public abstract DependenciesReferenceSet clone();
+
+    @Nonnull
+    @Override
+    public final String toString() {
+        return '[' + Joiner.on(",\n").join(references.values()) + ']';
+    }
+
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    private static boolean allStringCollection(@Nonnull Collection<?> c) {
+        return c.stream().allMatch(ci -> ci instanceof String);
+    }
 }
