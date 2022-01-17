@@ -35,16 +35,18 @@ public final class OverrideReferenceSet extends DependenciesReferenceSet {
             throws IllegalVersionConstraintException {
         super(references, unmodifiable);
 
-        Optional<PubSemVerConstraint> firstNonAbs = references.stream()
-                .filter(dr -> !mustBeAbsoluteVC(dr))
-                .map(navc -> ((VersionConstrainedDependency<?>) navc).versionConstraint())
-                .findFirst();
+        if (references instanceof ImportedReferenceSet irs) {
+            Optional<PubSemVerConstraint> firstNonAbs = irs.stream()
+                    .filter(dr -> !mustBeAbsoluteVC(dr))
+                    .map(navc -> ((VersionConstrainedDependency<?>) navc).versionConstraint())
+                    .findFirst();
 
-        if (firstNonAbs.isPresent())
-            throw new IllegalVersionConstraintException(
-                    "Overriding versioned constraint reference must be absolute",
-                    firstNonAbs.get()
-            );
+            if (firstNonAbs.isPresent())
+                throw new IllegalVersionConstraintException(
+                        "Overriding versioned constraint reference must be absolute",
+                        firstNonAbs.get()
+                );
+        }
     }
 
     /**
