@@ -12,7 +12,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 /**
  * A mutable object structure to match with <code>pubspec.yaml</code>.
@@ -592,9 +591,9 @@ public final class Pubspec implements PubspecStructure {
  */
 final class PermitAdditionalMapValue {
     /**
-     * A {@link Stream} of {@link Class} which can be assumed as primitive type in JSON.
+     * A {@link Set} of {@link Class} which can be assumed as primitive type in JSON.
      */
-    private static final Stream<Class<?>> JSON_LIKED_TYPE = Stream.of(
+    private static final Set<Class<?>> JSON_LIKED_TYPE = Set.of(
             Integer.class,
             int.class,
             Long.class,
@@ -637,9 +636,9 @@ final class PermitAdditionalMapValue {
      *
      * @return <code>true</code> if one of the {@link #JSON_LIKED_TYPE} matched.
      */
-    private static boolean isJsonLikedDataType(@Nullable Object v) {
+    private static synchronized boolean isJsonLikedDataType(@Nullable Object v) {
         if (v == null) return true;
-        return JSON_LIKED_TYPE.anyMatch(jlt -> jlt.equals(v.getClass()));
+        return JSON_LIKED_TYPE.stream().anyMatch(jlt -> jlt.equals(v.getClass()));
     }
 
     /**
