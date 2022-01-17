@@ -2,6 +2,7 @@ package xyz.rk0cc.willpub.pubspec.data;
 
 import org.junit.jupiter.api.*;
 import xyz.rk0cc.jogu.GitRepositoryURL;
+import xyz.rk0cc.jogu.UnknownGitRepositoryURLTypeException;
 import xyz.rk0cc.josev.constraint.pub.PubSemVerConstraint;
 import xyz.rk0cc.willpub.exceptions.pubspec.*;
 import xyz.rk0cc.willpub.pubspec.data.dependencies.type.*;
@@ -52,7 +53,7 @@ final class PubspecAssignmentTest {
                         .add(new HostedReference("path", PubSemVerConstraint.parse("^1.8.0")))
         );
         assertThrows(
-                IllegalArgumentException.class,
+                AssertionError.class,
                 () -> mockPubspec.dependencies()
                         .add(new HostedReference("neo_pubspec", PubSemVerConstraint.parse("<2.0.0 >=1.0.0")))
         );
@@ -62,23 +63,24 @@ final class PubspecAssignmentTest {
     @DisplayName("Test assigning dependencies overridden")
     @Test
     void testAddOverrideDependencies() {
-        assertDoesNotThrow(
-                () -> mockPubspec.dependencyOverrides()
-                        .add(new HostedReference("path", PubSemVerConstraint.parse("1.8.0")))
-        );
-        assertDoesNotThrow(
-                () -> mockPubspec.dependencyOverrides()
-                        .add(new GitReference(
-                                "sample_git_pkg",
-                                GitRepositoryURL.parse("git://example.com/sgp.git")
-                        ))
-        );
-        assertThrows(
-                IllegalVersionConstraintException.class,
-                () -> mockPubspec.dependencyOverrides()
-                        .add(new HostedReference("sembast", PubSemVerConstraint.parse("^3.1.1+1")))
-        );
-        assertEquals(2, mockPubspec.dependencyOverrides().size());
+        try {
+            assertTrue(mockPubspec.dependencyOverrides()
+                    .add(new HostedReference("path", PubSemVerConstraint.parse("1.8.0")))
+            );
+            assertTrue(mockPubspec.dependencyOverrides()
+                    .add(new GitReference(
+                            "sample_git_pkg",
+                            GitRepositoryURL.parse("git://example.com/sgp.git")
+                    ))
+            );
+            assertFalse(mockPubspec.dependencyOverrides()
+                            .add(new HostedReference("sembast", PubSemVerConstraint.parse("^3.1.1+1")))
+            );
+            assertEquals(2, mockPubspec.dependencyOverrides().size());
+        } catch (IllegalPubspecConfigurationException | UnknownGitRepositoryURLTypeException e) {
+            fail(e);
+        }
+
     }
 
     @DisplayName("Test applying additional data")

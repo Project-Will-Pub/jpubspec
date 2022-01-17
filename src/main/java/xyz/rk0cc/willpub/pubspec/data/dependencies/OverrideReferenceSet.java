@@ -37,7 +37,7 @@ public final class OverrideReferenceSet extends DependenciesReferenceSet {
 
         Optional<PubSemVerConstraint> firstNonAbs = references.stream()
                 .filter(dr -> !mustBeAbsoluteVC(dr))
-                .map(navc -> ((VersionConstrainedDependency) navc).versionConstraint())
+                .map(navc -> ((VersionConstrainedDependency<?>) navc).versionConstraint())
                 .findFirst();
 
         if (firstNonAbs.isPresent())
