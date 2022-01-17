@@ -8,7 +8,7 @@ on:
       - 'src/test/java/**.java'
       - 'src/test/resources/**'
       - 'pom.xml'
-      - ''.github/workflows/codeql.yml'
+      - '.github/workflows/codeql.yml'
   pull_request:
     branches:
       - main
