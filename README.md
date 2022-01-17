@@ -32,6 +32,11 @@ public class SampleApp {
 }
 ```
 
+## Setup
+
+* Maven 3.8.3 or above
+* JDK 17 or above
+
 ## License
 
 BSD-3
