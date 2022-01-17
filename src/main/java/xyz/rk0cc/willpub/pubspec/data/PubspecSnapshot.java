@@ -238,7 +238,6 @@ public final class PubspecSnapshot implements PubspecStructure, Serializable {
      *
      * @see #getMutableFromSnapshot(PubspecSnapshot)
      */
-    @SuppressWarnings("UseBulkOperation")
     public void recoverPubspec(@Nonnull Pubspec pubspec) {
         try {
             pubspec.modifyName(name);
@@ -258,9 +257,9 @@ public final class PubspecSnapshot implements PubspecStructure, Serializable {
             devDep.clear();
             depOr.clear();
 
-            dependencies.forEach(dep::add);
-            devDependencies.forEach(devDep::add);
-            dependencyOverrides.forEach(depOr::add);
+            dep.addAll(dependencies);
+            devDep.addAll(devDependencies);
+            depOr.addAll(dependencyOverrides);
 
             pubspec.clearAllAdditionalData();
 

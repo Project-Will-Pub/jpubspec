@@ -8,8 +8,11 @@ import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import java.io.Serializable;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -221,33 +224,69 @@ public sealed abstract class DependenciesReferenceSet implements Set<DependencyR
     }
 
     /**
-     * <h2>{@linkplain DependenciesReferenceSet} does not support it.</h2>
-     *
      * {@inheritDoc}
      */
     @Override
     public final boolean addAll(@Nonnull Collection<? extends DependencyReference> c) {
-        throw new UnsupportedOperationException("This set can not use add all functions");
+        if (c.stream().allMatch(this::isAllowToAdd)) {
+            c.forEach(this::add);
+            return true;
+        }
+        return false;
     }
 
     /**
-     * <h2>{@linkplain DependenciesReferenceSet} does not support it.</h2>
+     * Set all the elements and overwrite record if existed.
      *
+     * @param c Collection that pending to overwrite if existed.
+     *
+     * @return <code>true</code> if this collection changed as a result of the call.
+     */
+    public final boolean setAll(@Nonnull Collection<? extends DependencyReference> c) {
+        if (c.stream().allMatch(this::isAllowToAdd)) {
+            c.forEach(this::set);
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * {@inheritDoc}
+     * <br/>
+     * However, to reduce complication of retaining items, the {@link Collection} items must be {@link String} only.
      */
     @Override
     public final boolean retainAll(@Nonnull Collection<?> c) {
-        throw new UnsupportedOperationException("This set can not use retain all functions");
+        if (!((ParameterizedType) c.getClass().getGenericSuperclass()).getActualTypeArguments()[0].equals(String.class))
+            throw new ClassCastException("Retain all only accept String as reference");
+        return removeIf(dr -> c.stream().noneMatch(rmN -> rmN.equals(dr.name())));
     }
 
     /**
-     * <h2>{@linkplain DependenciesReferenceSet} does not support it.</h2>
-     *
      * {@inheritDoc}
      */
     @Override
     public final boolean removeAll(@Nonnull Collection<?> c) {
-        throw new UnsupportedOperationException("This set can not use remove all functions");
+        if (!((ParameterizedType) c.getClass().getGenericSuperclass()).getActualTypeArguments()[0].equals(String.class))
+            throw new ClassCastException("Retain all only accept String as reference");
+        return removeIf(dr -> c.stream().anyMatch(rmN -> rmN.equals(dr.name())));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public final boolean removeIf(Predicate<? super DependencyReference> filter) {
+        AtomicBoolean removed = new AtomicBoolean(false);
+
+        references.forEach((name, dr) -> {
+            if (filter.test(dr)) {
+                references.remove(name);
+                removed.set(true);
+            }
+        });
+
+        return removed.get();
     }
 
     /**
