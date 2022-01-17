@@ -1,0 +1,6 @@
+name: mock_pubspec_package_1
+description: Unexisted pubspec package for jpubspec tessting purpose
+environment:
+  sdk: '>=2.12.0 <3.0.0'
+version: 1.0.0+1
+publish_to: 'none'
