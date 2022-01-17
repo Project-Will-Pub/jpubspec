@@ -35,6 +35,11 @@ public final class PubspecParser {
     public static final ObjectMapper PUBSPEC_MAPPER;
 
     /**
+     * Like {@link #PUBSPEC_MAPPER}, but for JSON, not YAML.
+     */
+    public static final ObjectMapper PUBSPEC_JSON_MAPPER;
+
+    /**
      * A {@link Set} of {@link String} that the field name is implemented already in {@link Pubspec} and do not apply
      * in {@link Pubspec#additionalData() additional data}.
      */
@@ -71,6 +76,7 @@ public final class PubspecParser {
 
         // Initialize mapper
         PUBSPEC_MAPPER = new ObjectMapper(yaml).registerModule(pubspecMod);
+        PUBSPEC_JSON_MAPPER = new ObjectMapper().registerModule(pubspecMod);
     }
 
     /**
