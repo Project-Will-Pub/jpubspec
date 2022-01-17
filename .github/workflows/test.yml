@@ -1,0 +1,52 @@
+name: Test
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/main/java/**.java'
+      - 'src/test/java/**.java'
+      - 'src/test/resources/**'
+      - 'pom.xml'
+      - '.github/workflows/test.yml'
+  pull_request:
+    branches:
+      - main
+jobs:
+  surefire:
+    name: Maven surefire test
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - windows-latest
+          - macos-latest
+          - ubuntu-latest
+        jdk-distro:
+          - 'temurin'
+          - 'zulu'
+          - 'liberica'
+          - 'microsoft'
+        jdk-version:
+          - '17'
+          - '17.0'
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.4.0
+      - name: JDK setup
+        uses: actions/setup-java@v2.5.0
+        with:
+          distribution: ${{ matrix.jdk-distro }}
+          java-version: ${{ matrix.jdk-version }}
+          cache: 'maven'
+      - name: Run surefire
+        id: maven-surefire
+        run: mvn test
+      - name: Get stack trace if surefire test failed
+        if: ${{ failure() && steps.maven-surefire.outcome == 'failure' }}
+        uses: actions/upload-artifact@v2.3.1
+        with:
+          name: failstack-jdk${{ matrix.jdk-version }}-${{ matrix.jdk-distro }}-${{ matrix.os }}
+          path: target/surefire-reports/
+          retention-days: 7
