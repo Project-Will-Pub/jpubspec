@@ -35,8 +35,9 @@ public final class OverrideReferenceSet extends DependenciesReferenceSet {
             throws IllegalVersionConstraintException {
         super(references, unmodifiable);
 
-        if (references instanceof ImportedReferenceSet irs) {
-            Optional<PubSemVerConstraint> firstNonAbs = irs.stream()
+        if (!(references instanceof OverrideReferenceSet)) {
+            // Check all versioned package must be absolute if come from other reference set.
+            Optional<PubSemVerConstraint> firstNonAbs = references.stream()
                     .filter(dr -> !mustBeAbsoluteVC(dr))
                     .map(navc -> ((VersionConstrainedDependency<?>) navc).versionConstraint())
                     .findFirst();
