@@ -144,13 +144,13 @@ public final class PubspecParser {
                          devDepNode = pubspecYAML.get("devDependencies"),
                          depOverrideNode = pubspecYAML.get("dependencyOverrides");
 
-                if (depNode.isObject())
+                if (depNode != null && depNode.isObject())
                     assignDRFromNode((ObjectNode) depNode, dependencies);
 
-                if (devDepNode.isObject())
+                if (devDepNode != null && devDepNode.isObject())
                     assignDRFromNode((ObjectNode) devDepNode, devDependencies);
 
-                if (depOverrideNode.isObject())
+                if (depOverrideNode != null && depOverrideNode.isObject())
                     assignDRFromNode((ObjectNode) depOverrideNode, dependencyOverrides);
 
                 return new Pubspec(
