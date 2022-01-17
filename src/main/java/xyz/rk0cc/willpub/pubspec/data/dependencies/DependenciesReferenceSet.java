@@ -252,6 +252,8 @@ public sealed abstract class DependenciesReferenceSet implements Set<DependencyR
      */
     @Override
     public final boolean addAll(@Nonnull Collection<? extends DependencyReference> c) {
+        assertModifiable();
+
         if (c.stream().allMatch(this::isAllowToAdd)) {
             c.forEach(this::add);
             return true;
@@ -267,6 +269,8 @@ public sealed abstract class DependenciesReferenceSet implements Set<DependencyR
      * @return <code>true</code> if this collection changed as a result of the call.
      */
     public final boolean setAll(@Nonnull Collection<? extends DependencyReference> c) {
+        assertModifiable();
+
         if (c.stream().allMatch(this::isAllowToAdd)) {
             c.forEach(this::set);
             return true;
@@ -281,6 +285,8 @@ public sealed abstract class DependenciesReferenceSet implements Set<DependencyR
      */
     @Override
     public final boolean retainAll(@Nonnull Collection<?> c) {
+        assertModifiable();
+
         if (!allStringCollection(c))
             throw new ClassCastException("Retain all only accept String as reference");
         return removeIf(dr -> c.stream().noneMatch(rmN -> rmN.equals(dr.name())));
@@ -293,6 +299,8 @@ public sealed abstract class DependenciesReferenceSet implements Set<DependencyR
      */
     @Override
     public final boolean removeAll(@Nonnull Collection<?> c) {
+        assertModifiable();
+
         if (!allStringCollection(c))
             throw new ClassCastException("Remove all only accept String as reference");
         return removeIf(dr -> c.stream().anyMatch(rmN -> rmN.equals(dr.name())));
@@ -303,6 +311,8 @@ public sealed abstract class DependenciesReferenceSet implements Set<DependencyR
      */
     @Override
     public final boolean removeIf(Predicate<? super DependencyReference> filter) {
+        assertModifiable();
+
         boolean removed = false;
         for (DependencyReference dr : this) {
             if (filter.test(dr)) {
