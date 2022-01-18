@@ -32,6 +32,66 @@ public class SampleApp {
 }
 ```
 
+## Layout changes after using JPubspec
+
+Since YAML parser is using Jackson package which based on SnakeYAML, a package which is Java implementation
+on YAML **1.1** to make more but not fully compatible on YAML **1.2**, a version that using JSON syntax as standard.
+
+Thus, any string with quoted value will be removed if origin value does not represent another type or toggle capture
+symbol. If is, it wrapped by single quote (`'`) when export `Pubspec` to file.
+
+Here is some examples that will be affected if applied:
+
+#### Applying `null` in `HostedReference`'s version constraint
+
+**Origin**
+
+```yaml
+name: foo
+description: bar
+version: 1.0.0+1
+environment:
+  sdk: '>=2.12.0 <3.0.0'
+dependencies:
+  path: 
+```
+
+**Exported**
+
+```yaml
+name: foo
+description: bar
+version: 1.0.0+1
+environment:
+  sdk: '>=2.12.0 <3.0.0'
+dependencies:
+  path: null
+```
+
+#### Applying double quote
+
+**Origin**
+
+```yaml
+name: foo
+description: bar
+version: 1.0.0+1
+publish_to: "none"
+environment:
+  sdk: ">=2.12.0 <3.0.0"
+```
+
+**Exported**
+
+```yaml
+name: foo
+description: bar
+version: 1.0.0+1
+publish_to: none
+environment:
+  sdk: '>=2.12.0 <3.0.0'
+```
+
 ## Setup
 
 * Maven 3.8.3 or above
