@@ -267,6 +267,9 @@ public final class PubspecParser {
             if (snapshot.version() != null)
                 jsonGenerator.writeStringField("version", snapshot.version().value());
 
+            if (snapshot.publishTo() != null)
+                jsonGenerator.writeStringField("publish_to", snapshot.publishTo());
+
             // Env object wrapper
             jsonGenerator.writeObjectFieldStart("environment");
             jsonGenerator.writeStringField("sdk", sdk.rawConstraint());
