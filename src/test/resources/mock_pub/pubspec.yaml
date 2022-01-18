@@ -1,0 +1,5 @@
+name: mock_pub
+description: Mocking entire Dart project directory layout.
+version: 1.0.0
+environment:
+  sdk: '>=2.12.0 <3.0.0'
