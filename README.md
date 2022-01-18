@@ -5,6 +5,10 @@
 
 Allowing to read and write `pubspec.yaml` in JVM.
 
+## Note before parse `pubspec.yaml`
+
+Ensure `pubspec.yaml` is using `LF` line separator. If using `CRLF`, please save it to `LF` before parse.
+
 ## Usage
 
 ```java
