@@ -5,6 +5,7 @@ import xyz.rk0cc.josev.NonStandardSemVerException;
 import xyz.rk0cc.josev.constraint.pub.PubConstraintPattern;
 import xyz.rk0cc.josev.constraint.pub.PubSemVerConstraint;
 import xyz.rk0cc.willpub.exceptions.pubspec.IllegalPubspecConfigurationException;
+import xyz.rk0cc.willpub.pubspec.DoNotRemoveAutogenFile;
 import xyz.rk0cc.willpub.pubspec.data.Pubspec;
 import xyz.rk0cc.willpub.pubspec.data.PubspecEnvironment;
 import xyz.rk0cc.willpub.pubspec.data.dependencies.type.*;
