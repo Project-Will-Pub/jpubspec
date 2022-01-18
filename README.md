@@ -2,6 +2,7 @@
 
 [![Test](https://github.com/Project-Will-Pub/jpubspec/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/Project-Will-Pub/jpubspec/actions/workflows/test.yml)
 [![CodeQL](https://github.com/Project-Will-Pub/jpubspec/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/Project-Will-Pub/jpubspec/actions/workflows/codeql.yml)
+[![Maven Central](https://img.shields.io/maven-central/v/xyz.rk0cc.willpub/jpubspec.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22xyz.rk0cc.willpub%22%20AND%20a:%22jpubspec%22)
 
 Allowing to read and write `pubspec.yaml` in JVM.
 
