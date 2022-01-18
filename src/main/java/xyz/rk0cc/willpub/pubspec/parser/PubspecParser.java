@@ -81,6 +81,9 @@ public final class PubspecParser {
 
     /**
      * Implemented {@link StdDeserializer} to parsing <code>pubspec.yaml</code> to {@link Pubspec} object.
+     * <br/>
+     * This class can be annotated by {@link com.fasterxml.jackson.databind.annotation.JsonDeserialize} which not prefer
+     * using {@link #PUBSPEC_MAPPER bundled mapper}.
      *
      * @since 1.0.0
      */
@@ -88,14 +91,14 @@ public final class PubspecParser {
         /**
          * Construct parser without class declared.
          */
-        private PubspecFromYAML() {
+        public PubspecFromYAML() {
             this(null);
         }
 
         /**
          * Construct parser with class declared.
          */
-        private PubspecFromYAML(Class<?> vc) {
+        public PubspecFromYAML(Class<?> vc) {
             super(vc);
         }
 
@@ -213,12 +216,15 @@ public final class PubspecParser {
 
             dcn.remove(PUBSPEC_YAML_FIELD);
 
-            return new LinkedHashMap<>(PUBSPEC_MAPPER.convertValue(dcn, new TypeReference<Map<String, Object>>(){}));
+            return new LinkedHashMap<>(new ObjectMapper().convertValue(dcn, new TypeReference<Map<String, Object>>(){}));
         }
     }
 
     /**
      * Implemented {@link StdSerializer} to writing {@link Pubspec} to <code>pubspec.yaml</code>.
+     * <br/>
+     * This class can be annotated by {@link com.fasterxml.jackson.databind.annotation.JsonSerialize} which not prefer
+     * using {@link #PUBSPEC_MAPPER bundled mapper}.
      *
      * @since 1.0.0
      */
@@ -226,14 +232,14 @@ public final class PubspecParser {
         /**
          * Construct parser without class declared.
          */
-        private PubspecToYAML() {
+        public PubspecToYAML() {
             this(null);
         }
 
         /**
          * Construct parser with class declared.
          */
-        private PubspecToYAML(Class<Pubspec> t) {
+        public PubspecToYAML(Class<Pubspec> t) {
             super(t);
         }
 
