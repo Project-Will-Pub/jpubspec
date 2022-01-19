@@ -65,6 +65,7 @@ public final class PubspecParser {
                 .enable(Feature.LITERAL_BLOCK_STYLE)
                 .enable(Feature.INDENT_ARRAYS)
                 .enable(Feature.INDENT_ARRAYS_WITH_INDICATOR)
+                .enable(Feature.USE_PLATFORM_LINE_BREAKS)
                 .disable(Feature.USE_NATIVE_TYPE_ID)
                 .disable(Feature.CANONICAL_OUTPUT)
                 .disable(Feature.WRITE_DOC_START_MARKER);
@@ -78,6 +79,8 @@ public final class PubspecParser {
         PUBSPEC_MAPPER = new ObjectMapper(yaml).registerModule(pubspecMod);
         PUBSPEC_JSON_MAPPER = new ObjectMapper().registerModule(pubspecMod);
     }
+
+    private PubspecParser() {}
 
     /**
      * Implemented {@link StdDeserializer} to parsing <code>pubspec.yaml</code> to {@link Pubspec} object.
