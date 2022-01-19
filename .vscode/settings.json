@@ -3,5 +3,6 @@
     "https://json.schemastore.org/pubspec.json": [
       "/src/test/resources/xyz/rk0cc/willpub/pubspec/parser/*"
     ]
-  }
+  },
+  "dart.runPubGetOnPubspecChanges"​: ​false
 }
