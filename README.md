@@ -12,6 +12,16 @@ Allowing to read and write `pubspec.yaml` in JVM.
 
 You can parse `pubspec.yaml` with `CRLF` since `1.0.1`
 
+## Install
+
+```xml
+<dependency>
+    <groupId>xyz.rk0cc.willpub</groupId>
+    <artifactId>jpubspec</artifactId>
+    <version>1.1.0</version>
+</dependency>
+```
+
 ## Usage
 
 ```java
