@@ -30,16 +30,6 @@ import static com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
  */
 public final class PubspecParser {
     /**
-     * An {@link ObjectMapper} which implemented preference of reading and writing YAML file already.
-     */
-    public static final ObjectMapper PUBSPEC_MAPPER;
-
-    /**
-     * Like {@link #PUBSPEC_MAPPER}, but for JSON, not YAML.
-     */
-    public static final ObjectMapper PUBSPEC_JSON_MAPPER;
-
-    /**
      * A {@link Set} of {@link String} that the field name is implemented already in {@link Pubspec} and do not apply
      * in {@link Pubspec#additionalData() additional data}.
      */
@@ -58,9 +48,28 @@ public final class PubspecParser {
             "dependency_overrides"
     );
 
-    static {
-        // Set YAML preference
-        final YAMLFactory yaml = new YAMLFactory()
+    /**
+     * A module for assigning {@link StdSerializer} and {@link StdDeserializer} for parsing {@link Pubspec}
+     *
+     * @return A {@link SimpleModule} of resolving data to {@link Pubspec} or vice versa.
+     */
+    @Nonnull
+    private static SimpleModule pubsepcModule() {
+        final SimpleModule pubspecMod = new SimpleModule();
+        pubspecMod.addSerializer(Pubspec.class, new PubspecToYAML());
+        pubspecMod.addDeserializer(Pubspec.class, new PubspecFromYAML());
+        return pubspecMod;
+    }
+
+    /**
+     * Give an object mapper for parsing {@link Pubspec} on YAML.
+     *
+     * @return An {@link ObjectMapper} for parsing YAML {@link Pubspec}.
+     *
+     * @since 1.1.0
+     */
+    public static ObjectMapper pubspecYamlMapper() {
+        return new ObjectMapper(new YAMLFactory()
                 .enable(Feature.MINIMIZE_QUOTES)
                 .enable(Feature.LITERAL_BLOCK_STYLE)
                 .enable(Feature.INDENT_ARRAYS)
@@ -68,16 +77,19 @@ public final class PubspecParser {
                 .enable(Feature.USE_PLATFORM_LINE_BREAKS)
                 .disable(Feature.USE_NATIVE_TYPE_ID)
                 .disable(Feature.CANONICAL_OUTPUT)
-                .disable(Feature.WRITE_DOC_START_MARKER);
+                .disable(Feature.WRITE_DOC_START_MARKER)
+        ).registerModule(pubsepcModule());
+    }
 
-        // Bind serializer and deserializer
-        final SimpleModule pubspecMod = new SimpleModule();
-        pubspecMod.addSerializer(Pubspec.class, new PubspecToYAML());
-        pubspecMod.addDeserializer(Pubspec.class, new PubspecFromYAML());
-
-        // Initialize mapper
-        PUBSPEC_MAPPER = new ObjectMapper(yaml).registerModule(pubspecMod);
-        PUBSPEC_JSON_MAPPER = new ObjectMapper().registerModule(pubspecMod);
+    /**
+     * Give an object mapper for parsing {@link Pubspec} on JSON.
+     *
+     * @return An {@link ObjectMapper} for parsing JSON {@link Pubspec}.
+     *
+     * @since 1.1.0
+     */
+    public static ObjectMapper pubspecJsonMapper() {
+        return new ObjectMapper().registerModule(pubsepcModule());
     }
 
     private PubspecParser() {}
@@ -86,11 +98,11 @@ public final class PubspecParser {
      * Implemented {@link StdDeserializer} to parsing <code>pubspec.yaml</code> to {@link Pubspec} object.
      * <br/>
      * This class can be annotated by {@link com.fasterxml.jackson.databind.annotation.JsonDeserialize} which not prefer
-     * using {@link #PUBSPEC_MAPPER bundled mapper}.
+     * using {@link #pubspecYamlMapper()}  bundled mapper}.
      *
      * @since 1.0.0
      */
-    public static final class PubspecFromYAML extends StdDeserializer<Pubspec> {
+    private static final class PubspecFromYAML extends StdDeserializer<Pubspec> {
         /**
          * Construct parser without class declared.
          */
@@ -227,11 +239,11 @@ public final class PubspecParser {
      * Implemented {@link StdSerializer} to writing {@link Pubspec} to <code>pubspec.yaml</code>.
      * <br/>
      * This class can be annotated by {@link com.fasterxml.jackson.databind.annotation.JsonSerialize} which not prefer
-     * using {@link #PUBSPEC_MAPPER bundled mapper}.
+     * using {@link #pubspecYamlMapper()}  bundled mapper}.
      *
      * @since 1.0.0
      */
-    public static final class PubspecToYAML extends StdSerializer<Pubspec> {
+    private static final class PubspecToYAML extends StdSerializer<Pubspec> {
         /**
          * Construct parser without class declared.
          */

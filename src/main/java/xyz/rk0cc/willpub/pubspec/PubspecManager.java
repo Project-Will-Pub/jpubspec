@@ -70,7 +70,7 @@ public class PubspecManager {
      */
     @Nonnull
     public final Pubspec loadPubspec() throws IOException {
-        return PubspecParser.PUBSPEC_MAPPER.readValue(pubspecYAML(), Pubspec.class);
+        return PubspecParser.pubspecYamlMapper().readValue(pubspecYAML(), Pubspec.class);
     }
 
     /**
@@ -81,7 +81,7 @@ public class PubspecManager {
      * @throws IOException If converting {@link Pubspec} to <code>pubspec.yaml</code> failed.
      */
     public final void savePubspec(@Nonnull Pubspec pubspec) throws IOException {
-        PubspecParser.PUBSPEC_MAPPER.writeValue(pubspecYAML(), pubspec);
+        PubspecParser.pubspecYamlMapper().writeValue(pubspecYAML(), pubspec);
     }
 
     /**
