@@ -19,7 +19,7 @@ import java.util.function.Predicate;
  * This object is trying to replicate the field form <code>pubspec.yaml</code> and can be modified under JVM. And
  * integrated {@link PubspecValueValidator validator} to validate each inserted field is following the documentation.
  * The source of {@link Pubspec} can be from {@link #Pubspec(String, PubspecEnvironment, SemVer, String, String, URL, URL, URL, URL, ImportedReferenceSet, ImportedReferenceSet, OverrideReferenceSet, Map) constructor},
- * {@link PubspecParser#PUBSPEC_MAPPER mapper's} {@link com.fasterxml.jackson.databind.ObjectMapper#readValue(File, Class) reader},
+ * {@link PubspecParser mapper's} {@link com.fasterxml.jackson.databind.ObjectMapper#readValue(File, Class) reader},
  * or {@link PubspecSnapshot#getMutableFromSnapshot(PubspecSnapshot) immutable snapshot}.
  * <br/>
  * It accepted {@link #additionalData() additional field data} to allow assigning deprecated or platform unique field
