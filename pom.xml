@@ -45,7 +45,7 @@
 
     <groupId>xyz.rk0cc.willpub</groupId>
     <artifactId>jpubspec</artifactId>
-    <version>1.2.0</version>
+    <version>1.2.1</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -63,12 +63,12 @@
         <dependency>
             <groupId>xyz.rk0cc.josev</groupId>
             <artifactId>josev-core</artifactId>
-            <version>3.1.0</version>
+            <version>3.1.1</version>
         </dependency>
         <dependency>
             <groupId>xyz.rk0cc.josev</groupId>
             <artifactId>josev-pub</artifactId>
-            <version>3.0.2</version>
+            <version>3.0.3</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>

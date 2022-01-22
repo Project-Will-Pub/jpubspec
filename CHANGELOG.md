@@ -1,3 +1,8 @@
+## 1.2.1
+
+* Update `josev-core` to `3.1.1`.
+  * Fix `SemVer.parse(String)` failure for some specific version pattern.
+
 ## 1.2.0
 
 * Isolate needed package for different parser.
