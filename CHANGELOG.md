@@ -1,3 +1,7 @@
+## 1.2.0
+
+* Isolate needed package for different parser.
+
 ## 1.1.0
 
 * Uses instance method to get `ObjectMapper`.

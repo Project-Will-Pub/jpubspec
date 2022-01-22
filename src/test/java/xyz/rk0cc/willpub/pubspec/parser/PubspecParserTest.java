@@ -27,7 +27,7 @@ final class PubspecParserTest {
     @Test
     void testMinimalPubspec() {
         try {
-            Pubspec py1 = PubspecParser.pubspecYamlMapper().readValue(getClass().getResource("1.yaml"), Pubspec.class);
+            Pubspec py1 = PubspecYAMLParser.getParser().readValue(getClass().getResource("1.yaml"), Pubspec.class);
             assertEquals(py1.name(), "mock_pubspec_package_1");
             assertEquals(py1.description(), "Unexisted pubspec package for jpubspec tessting purpose");
             assertEquals(py1.environment().sdk().rawConstraint(), ">=2.12.0 <3.0.0");
@@ -44,7 +44,7 @@ final class PubspecParserTest {
     @Test
     void testBasicPubspec() {
         try {
-            Pubspec py2 = PubspecParser.pubspecYamlMapper().readValue(getClass().getResource("2.yaml"), Pubspec.class);
+            Pubspec py2 = PubspecYAMLParser.getParser().readValue(getClass().getResource("2.yaml"), Pubspec.class);
             assertEquals(py2.name(), "mock_cupertino_calendar");
             assertEquals(py2.description(), "A calendar widget special design for Cupertino UI in Flutter which uses as test");
             assertEquals(py2.environment().sdk().rawConstraint(), ">=2.14.0 <3.0.0");
@@ -94,7 +94,7 @@ final class PubspecParserTest {
             wP.dependencies().set(new HostedReference("path", PubSemVerConstraint.parse("^1.8.0")));
             wP.modifyAdditionalData("flutter", null);
 
-            PubspecParser.pubspecYamlMapper().writeValue(pendingWriteFile, wP);
+            PubspecYAMLParser.getParser().writeValue(pendingWriteFile, wP);
 
             assertTrue(true);
         } catch (

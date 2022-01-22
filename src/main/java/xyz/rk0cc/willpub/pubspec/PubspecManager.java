@@ -4,7 +4,7 @@ import xyz.rk0cc.willpub.exceptions.pubspec.ApplyNonPubProjectDirectoryException
 import xyz.rk0cc.willpub.pubspec.data.Pubspec;
 import xyz.rk0cc.willpub.pubspec.data.PubspecSnapshot;
 import xyz.rk0cc.willpub.pubspec.data.dependencies.type.LocalReference;
-import xyz.rk0cc.willpub.pubspec.parser.PubspecParser;
+import xyz.rk0cc.willpub.pubspec.parser.PubspecYAMLParser;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -70,7 +70,7 @@ public class PubspecManager {
      */
     @Nonnull
     public final Pubspec loadPubspec() throws IOException {
-        return PubspecParser.pubspecYamlMapper().readValue(pubspecYAML(), Pubspec.class);
+        return PubspecYAMLParser.getParser().readValue(pubspecYAML(), Pubspec.class);
     }
 
     /**
@@ -81,7 +81,7 @@ public class PubspecManager {
      * @throws IOException If converting {@link Pubspec} to <code>pubspec.yaml</code> failed.
      */
     public final void savePubspec(@Nonnull Pubspec pubspec) throws IOException {
-        PubspecParser.pubspecYamlMapper().writeValue(pubspecYAML(), pubspec);
+        PubspecYAMLParser.getParser().writeValue(pubspecYAML(), pubspec);
     }
 
     /**
