@@ -111,7 +111,7 @@ environment:
 
 ## Setup
 
-* Maven 3.8.3 or above
+* Maven 3 or above
 * JDK 17 or above
 
 ## License
