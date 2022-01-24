@@ -18,7 +18,7 @@ You can parse `pubspec.yaml` with `CRLF` since `1.0.1`
 <dependency>
     <groupId>xyz.rk0cc.willpub</groupId>
     <artifactId>jpubspec</artifactId>
-    <version>1.2.0</version>
+    <version>1.2.1</version>
 </dependency>
 ```
 
@@ -111,7 +111,7 @@ environment:
 
 ## Setup
 
-* Maven 3.8.3 or above
+* Maven 3 or above
 * JDK 17 or above
 
 ## License
