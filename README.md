@@ -14,6 +14,8 @@ You can parse `pubspec.yaml` with `CRLF` since `1.0.1`
 
 ## Install
 
+Ensure implemented Jackson and YAML parser (`jackson-dataformat-yaml`) already.
+
 ```xml
 <dependency>
     <groupId>xyz.rk0cc.willpub</groupId>
