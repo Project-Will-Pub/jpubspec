@@ -20,7 +20,7 @@ Ensure implemented Jackson and YAML parser (`jackson-dataformat-yaml`) already.
 <dependency>
     <groupId>xyz.rk0cc.willpub</groupId>
     <artifactId>jpubspec</artifactId>
-    <version>1.2.2</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 
