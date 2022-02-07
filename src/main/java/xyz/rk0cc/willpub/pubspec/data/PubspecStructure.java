@@ -111,6 +111,14 @@ interface PubspecStructure {
     OverrideReferenceSet dependencyOverrides();
 
     /**
+     * Display platform supported state in <code>pubspec.yaml</code>.
+     *
+     * @return Platformed supported state.
+     */
+    @Nonnull
+    PubspecPlatforms platforms();
+
+    /**
      * Fields in <code>pubspec.yaml</code> which does not declare in this interface.
      *
      * @return Additional field map data.

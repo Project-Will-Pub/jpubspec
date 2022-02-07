@@ -8,7 +8,9 @@ import com.fasterxml.jackson.databind.node.*;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import xyz.rk0cc.jogu.GitRepositoryURL;
+import xyz.rk0cc.josev.NonStandardSemVerException;
 import xyz.rk0cc.josev.SemVer;
+import xyz.rk0cc.josev.SemVerRangeNode;
 import xyz.rk0cc.josev.constraint.pub.PubSemVerConstraint;
 import xyz.rk0cc.willpub.pubspec.data.*;
 import xyz.rk0cc.willpub.pubspec.data.dependencies.*;
@@ -42,7 +44,8 @@ public final class PubspecParser {
             "documentation",
             "dependencies",
             "dev_dependencies",
-            "dependency_overrides"
+            "dependency_overrides",
+            "platforms"
     );
 
     /**
@@ -140,6 +143,21 @@ public final class PubspecParser {
                 if (depOverrideNode != null && depOverrideNode.isObject())
                     assignDRFromNode((ObjectNode) depOverrideNode, dependencyOverrides);
 
+                PubspecPlatforms platforms;
+
+                if (pubspecYAML.has("platforms")) {
+                    ObjectNode node = (ObjectNode) pubspecYAML.get("platforms");
+                    platforms = new PubspecPlatforms(
+                            node.has("android"),
+                            node.has("ios"),
+                            node.has("linux"),
+                            node.has("macos"),
+                            node.has("web"),
+                            node.has("windows")
+                    );
+                } else
+                    platforms = PubspecPlatforms.createAllSupported();
+
                 return new Pubspec(
                         name,
                         environment,
@@ -153,6 +171,7 @@ public final class PubspecParser {
                         dependencies,
                         devDependencies,
                         dependencyOverrides,
+                        platforms,
                         jsonNodeAFParser(pubspecYAML)
                 );
             } catch (Exception e) {
@@ -283,6 +302,39 @@ public final class PubspecParser {
                 jsonGenerator.writeObjectFieldStart("dependency_overrides");
                 writeDRSInJson(snapshot.dependencyOverrides(), jsonGenerator, sdk);
                 jsonGenerator.writeEndObject();
+            }
+
+            SemVerRangeNode sdkStartRange = snapshot.environment().sdk().start();
+            boolean dart216;
+            try {
+                dart216 = sdkStartRange.orEquals()
+                        ? sdkStartRange.semVer().isGreaterOrEquals(SemVer.parse("2.16.0"))
+                        : sdkStartRange.semVer().isGreater(SemVer.parse("2.16.0"));
+            } catch (NonStandardSemVerException e) {
+                throw new RuntimeException(e);
+            }
+
+            // Display supported platform when Dart 2.16 or later
+            if (dart216) {
+                boolean forceShowPlatforms = PubspecParsePreference.eligible(
+                        PubspecParsePreference.SHOW_PLATFORMS_ENTRY_WHEN_ALL_PLATFORM_SUPPORTED,
+                        snapshot.environment().sdk()
+                );
+
+                if (
+                        (forceShowPlatforms && snapshot.platforms().supportAllPlatforms())
+                                || !snapshot.platforms().supportAllPlatforms()
+                ) {
+                    PubspecPlatforms p = snapshot.platforms();
+                    jsonGenerator.writeObjectFieldStart("platforms");
+                    if (p.android()) jsonGenerator.writeNullField("android");
+                    if (p.ios()) jsonGenerator.writeNullField("ios");
+                    if (p.linux()) jsonGenerator.writeNullField("linux");
+                    if (p.macos()) jsonGenerator.writeNullField("macos");
+                    if (p.web()) jsonGenerator.writeNullField("web");
+                    if (p.windows()) jsonGenerator.writeNullField("windows");
+                    jsonGenerator.writeEndObject();
+                }
             }
 
             // Append remaining additional field

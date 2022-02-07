@@ -32,6 +32,7 @@ public final class PubspecSnapshot implements PubspecStructure, Serializable {
     private final SemVer version;
     private final PubspecEnvironment environment;
     private final URL homepage, repository, issueTracker, documentation;
+    private final PubspecPlatforms platforms;
     private final ImportedReferenceSet dependencies, devDependencies;
     private final OverrideReferenceSet dependencyOverrides;
     private final Map<String, Object> additionalData;
@@ -53,7 +54,7 @@ public final class PubspecSnapshot implements PubspecStructure, Serializable {
      * @param dependencyOverrides Package dependencies which uses to be overridden.
      * @param additionalData Package additional data.
      *
-     * @see Pubspec#Pubspec(String, PubspecEnvironment, SemVer, String, String, URL, URL, URL, URL, ImportedReferenceSet, ImportedReferenceSet, OverrideReferenceSet, Map) Same structre but detailed parameter descriptions.
+     * @see Pubspec#Pubspec(String, PubspecEnvironment, SemVer, String, String, URL, URL, URL, URL, ImportedReferenceSet, ImportedReferenceSet, OverrideReferenceSet, PubspecPlatforms, Map) Same structre but detailed parameter descriptions.
      */
     private PubspecSnapshot(
             @Nonnull String name,
@@ -68,6 +69,7 @@ public final class PubspecSnapshot implements PubspecStructure, Serializable {
             @Nonnull ImportedReferenceSet dependencies,
             @Nonnull ImportedReferenceSet devDependencies,
             @Nonnull OverrideReferenceSet dependencyOverrides,
+            @Nonnull PubspecPlatforms platforms,
             @Nonnull Map<String, Object> additionalData
     ) {
         assert dependencies.isUnmodifiable();
@@ -85,6 +87,7 @@ public final class PubspecSnapshot implements PubspecStructure, Serializable {
         this.dependencies = dependencies;
         this.devDependencies = devDependencies;
         this.dependencyOverrides = dependencyOverrides;
+        this.platforms = platforms;
         this.additionalData = Collections.unmodifiableMap(additionalData);
     }
 
@@ -221,6 +224,17 @@ public final class PubspecSnapshot implements PubspecStructure, Serializable {
     }
 
     /**
+     * Current supported platform for this snapshot.
+     *
+     * @return {@link PubspecPlatforms Supported platform} in this snapshot.
+     */
+    @Nonnull
+    @Override
+    public PubspecPlatforms platforms() {
+        return platforms;
+    }
+
+    /**
      * An unmodifiable {@link Map} of additional data of this snapshot.
      *
      * @return A {@link Map} of additional data.
@@ -293,6 +307,7 @@ public final class PubspecSnapshot implements PubspecStructure, Serializable {
                     new ImportedReferenceSet(pubspec.dependencies(), true),
                     new ImportedReferenceSet(pubspec.devDependencies(), true),
                     new OverrideReferenceSet(pubspec.dependencyOverrides(), true),
+                    pubspec.platforms(),
                     pubspec.additionalData()
             );
         } catch (IllegalVersionConstraintException e) {
@@ -328,6 +343,7 @@ public final class PubspecSnapshot implements PubspecStructure, Serializable {
                     new ImportedReferenceSet(snapshot.dependencies(), false),
                     new ImportedReferenceSet(snapshot.devDependencies(), false),
                     new OverrideReferenceSet(snapshot.dependencyOverrides(), false),
+                    snapshot.platforms(),
                     snapshot.additionalData()
             );
         } catch (IllegalPubspecConfigurationException e) {

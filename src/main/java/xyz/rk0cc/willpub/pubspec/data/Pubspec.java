@@ -18,7 +18,7 @@ import java.util.function.Predicate;
  * <br/>
  * This object is trying to replicate the field form <code>pubspec.yaml</code> and can be modified under JVM. And
  * integrated {@link PubspecValueValidator validator} to validate each inserted field is following the documentation.
- * The source of {@link Pubspec} can be from {@link #Pubspec(String, PubspecEnvironment, SemVer, String, String, URL, URL, URL, URL, ImportedReferenceSet, ImportedReferenceSet, OverrideReferenceSet, Map) constructor},
+ * The source of {@link Pubspec} can be from {@link #Pubspec(String, PubspecEnvironment, SemVer, String, String, URL, URL, URL, URL, ImportedReferenceSet, ImportedReferenceSet, OverrideReferenceSet, PubspecPlatforms, Map) constructor},
  * {@link PubspecParser mapper's} {@link com.fasterxml.jackson.databind.ObjectMapper#readValue(File, Class) reader},
  * or {@link PubspecSnapshot#getMutableFromSnapshot(PubspecSnapshot) immutable snapshot}.
  * <br/>
@@ -36,6 +36,7 @@ public final class Pubspec implements PubspecStructure {
     private SemVer version;
     private PubspecEnvironment environment;
     private URL homepage, repository, issueTracker, documentation;
+    private PubspecPlatforms platforms;
     private final ImportedReferenceSet dependencies, devDependencies;
     private final OverrideReferenceSet dependencyOverrides;
     private final Map<String, Object> additionalData;
@@ -65,6 +66,8 @@ public final class Pubspec implements PubspecStructure {
      * @param dependencyOverrides A {@link DependenciesReferenceSet set} to specify
      *                            {@link xyz.rk0cc.willpub.pubspec.data.dependencies.type.DependencyReference reference}
      *                            will be applied in package's own pubspec.
+     * @param platforms Specify which platform can be supported. (Apply <code>null</code> equals with all platforms
+     *                  supported.)
      * @param additionalData A {@link Map} containing fields which not mentioned in {@link Pubspec}.
      *
      * @throws IllegalPubPackageNamingException If <code>name</code> does not meet requirement of
@@ -83,6 +86,7 @@ public final class Pubspec implements PubspecStructure {
             @Nullable ImportedReferenceSet dependencies,
             @Nullable ImportedReferenceSet devDependencies,
             @Nullable OverrideReferenceSet dependencyOverrides,
+            @Nullable PubspecPlatforms platforms,
             @Nullable Map<String, Object> additionalData
     ) throws IllegalPubPackageNamingException {
         this.modifyName(name);
@@ -105,6 +109,7 @@ public final class Pubspec implements PubspecStructure {
         } catch (IllegalVersionConstraintException e) {
             throw new IllegalArgumentException("Found illegal version constraint override dependency in the set.", e);
         }
+        this.modifyPlatforms(platforms == null ? PubspecPlatforms.createAllSupported() : platforms);
         assert additionalData == null || additionalData.values().stream().allMatch(Pubspec::isJsonLikedObject);
         this.additionalData = additionalData == null ? new LinkedHashMap<>() : new LinkedHashMap<>(additionalData);
     }
@@ -126,6 +131,7 @@ public final class Pubspec implements PubspecStructure {
                 environment,
                 null,
                 "none",
+                null,
                 null,
                 null,
                 null,
@@ -288,6 +294,10 @@ public final class Pubspec implements PubspecStructure {
      */
     public void modifyDocumentation(@Nullable String documentation) throws MalformedURLException {
         this.modifyDocumentation(documentation == null ? null : new URL(documentation));
+    }
+
+    public void modifyPlatforms(@Nonnull PubspecPlatforms platforms) {
+        this.platforms = platforms;
     }
 
     /**
@@ -497,6 +507,12 @@ public final class Pubspec implements PubspecStructure {
     @Override
     public OverrideReferenceSet dependencyOverrides() {
         return dependencyOverrides;
+    }
+
+    @Nonnull
+    @Override
+    public PubspecPlatforms platforms() {
+        return platforms;
     }
 
     /**

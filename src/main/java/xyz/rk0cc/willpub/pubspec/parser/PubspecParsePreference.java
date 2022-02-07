@@ -50,6 +50,21 @@ public enum PubspecParsePreference {
         return sdkStart.orEquals()
                 ? sdkStart.semVer().isGreaterOrEquals(supportedSince)
                 : sdkStart.semVer().isGreater(supportedSince);
+    }),
+    /**
+     * Display <code>platforms</code> field even {@link xyz.rk0cc.willpub.pubspec.data.PubspecPlatforms} set all
+     * <code>true</code>.
+     * <br/>
+     * This option required Dart 2.16 or later in SDK constraint and disabled by default.
+     */
+    SHOW_PLATFORMS_ENTRY_WHEN_ALL_PLATFORM_SUPPORTED(sdkc -> {
+        SemVerRangeNode sdkStart = sdkc.start();
+
+        SemVer supportedSince = new SemVer(2, 16);
+
+        return sdkStart.orEquals()
+                ? sdkStart.semVer().isGreaterOrEquals(supportedSince)
+                : sdkStart.semVer().isGreater(supportedSince);
     });
 
     /**
@@ -71,7 +86,7 @@ public enum PubspecParsePreference {
      * {@link EnumSet} which contains enabled preferences.
      */
     private static final EnumSet<PubspecParsePreference> enabledPreference
-            = EnumSet.allOf(PubspecParsePreference.class);
+            = EnumSet.of(SUCCINCT_THIRD_PARTY_HOSTED_FORMAT);
 
     /**
      * Enable giving preference and apply it when meeting SDK constraint requirement.

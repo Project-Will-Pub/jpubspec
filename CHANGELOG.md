@@ -1,3 +1,7 @@
+## 2.0.0
+
+* Add [supported platform](https://dart.dev/tools/pub/pubspec#platforms) indicator.
+
 ## 1.2.1
 
 * Update `josev-core` to `3.1.1`.
