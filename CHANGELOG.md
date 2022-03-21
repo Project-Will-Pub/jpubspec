@@ -1,3 +1,7 @@
+## 2.0.1
+
+* Update `com.fasterxml.jackson.core:jackson-databind` to `2.13.2` which `2.13.1` has DoS concern
+
 ## 2.0.0
 
 * Add [supported platform](https://dart.dev/tools/pub/pubspec#platforms) indicator.
