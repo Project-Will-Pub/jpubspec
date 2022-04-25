@@ -141,7 +141,7 @@
                     <!-- Create javadoc file -->
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>3.3.2</version>
+                    <version>3.4.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -242,7 +242,7 @@
                         <!-- Create javadoc file -->
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.3.2</version>
+                        <version>3.4.0</version>
                         <executions>
                             <execution>
                                 <phase>package</phase>
@@ -321,7 +321,7 @@
                         <!-- Create javadoc file -->
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.3.2</version>
+                        <version>3.4.0</version>
                         <executions>
                             <execution>
                                 <phase>package</phase>
